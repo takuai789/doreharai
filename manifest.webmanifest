@@ -1,0 +1,17 @@
+{
+  "name": "どれ払い",
+  "short_name": "どれ払い",
+  "description": "条件を選んで支払い方法を比較する",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#059669",
+  "theme_color": "#059669",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

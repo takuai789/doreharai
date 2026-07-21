@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="どれ払い" />
+<meta name="theme-color" content="#059669" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2310B981'/%3E%3Cstop offset='1' stop-color='%23047857'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='32' y='34' font-family='Arial,sans-serif' font-size='42' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='central'%3E%C2%A5%3C/text%3E%3C/svg%3E" />
+<title>どれ払い</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #F2F2F7;
+    --card: #FFFFFF;
+    --ink: #1a1a1a;
+    --secondary: rgba(60,60,67,0.6);
+    --tertiary: rgba(60,60,67,0.3);
+    --sep: rgba(60,60,67,0.18);
+    --blue: #007AFF;
+    --red: #FF3B30;
+    --green: #059669;
+    --green-soft: #E7F6EF;
+    --gold: #B8860B;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body {
+    font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+    color: var(--ink); font-size: 16px; -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+  }
+  #app {
+    height: var(--app-height, 100%);
+    display: flex; flex-direction: column;
+    padding-top: var(--safe-top);
+    transition: height 0.15s ease-out;
+  }
+  .view { display: none; flex-direction: column; flex: 1; min-height: 0; }
+  .view.active { display: flex; }
+
+  .navbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; min-height: 44px; position: relative;
+    background: rgba(242,242,247,0.92);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-bottom: 0.5px solid var(--sep); z-index: 10;
+  }
+  .navbar .title {
+    font-size: 17px; font-weight: 600;
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none; white-space: nowrap;
+  }
+  .icon-btn {
+    width: 36px; min-width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--blue); background: none; border: 0; cursor: pointer;
+    font-family: inherit;
+  }
+  .text-btn {
+    min-height: 36px; padding: 0 6px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--blue); background: none; border: 0; cursor: pointer;
+    font-family: inherit; font-size: 16px;
+  }
+  .text-btn.bold { font-weight: 600; }
+  .text-btn:disabled { color: var(--tertiary); }
+
+  .scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 16px calc(var(--safe-bottom) + 24px); }
+
+  .section-label {
+    font-size: 13px; color: var(--secondary); font-weight: 500;
+    margin: 14px 4px 6px; letter-spacing: 0.02em;
+  }
+  .card { background: var(--card); border-radius: 14px; overflow: hidden; }
+
+  /* 金額入力 */
+  .amount-card { display: flex; align-items: center; gap: 8px; padding: 10px 14px; }
+  .amount-card .yen { font-size: 20px; font-weight: 600; color: var(--secondary); }
+  .amount-card input {
+    flex: 1; border: 0; outline: none; font-family: inherit;
+    font-size: 22px; font-weight: 600; background: transparent; color: var(--ink);
+    min-width: 0;
+  }
+  .amount-card input::placeholder { color: var(--tertiary); font-weight: 400; font-size: 17px; }
+  .clear-btn {
+    width: 26px; height: 26px; border-radius: 50%; border: 0; cursor: pointer;
+    background: rgba(60,60,67,0.12); color: var(--secondary);
+    display: flex; align-items: center; justify-content: center; font-size: 14px;
+    flex-shrink: 0;
+  }
+  .clear-btn.hidden { visibility: hidden; }
+
+  /* 条件チップ */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px; }
+  .chip {
+    padding: 8px 14px; border-radius: 999px; border: 1px solid var(--sep);
+    background: var(--card); color: var(--ink); font-family: inherit;
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  .chip.on { background: var(--green); border-color: var(--green); color: #fff; }
+  .chips-empty { font-size: 13px; color: var(--tertiary); padding: 4px; }
+
+  /* 今月のメモ */
+  #monthMemo {
+    display: block; width: 100%; border: 0; outline: none; resize: none;
+    background: transparent; font-family: inherit; font-size: 15px; line-height: 1.6;
+    color: var(--ink); padding: 12px 14px; min-height: 46px; overflow: hidden;
+  }
+  #monthMemo::placeholder { color: var(--tertiary); }
+  .section-label .stale { color: #C2410C; font-weight: 600; }
+
+  /* ランキング */
+  .rank-card {
+    background: var(--card); border-radius: 14px; padding: 12px 14px;
+    margin-bottom: 10px; display: flex; align-items: center; gap: 12px;
+    border: 1.5px solid transparent;
+  }
+  .rank-card.top { border-color: var(--green); background: linear-gradient(0deg, var(--green-soft), var(--green-soft)), var(--card); }
+  .rank-num {
+    width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: var(--secondary);
+    background: rgba(60,60,67,0.08);
+  }
+  .rank-card.top .rank-num { background: var(--green); color: #fff; }
+  .rank-main { flex: 1; min-width: 0; }
+  .rank-name { font-size: 16px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rank-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .badge {
+    font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+    background: var(--green-soft); color: var(--green);
+  }
+  .badge.base { background: rgba(60,60,67,0.08); color: var(--secondary); font-weight: 500; }
+  .rank-right { text-align: right; flex-shrink: 0; }
+  .rank-rate { font-size: 20px; font-weight: 700; color: var(--green); white-space: nowrap; }
+  .rank-card:not(.top) .rank-rate { color: var(--ink); }
+  .rank-sub { font-size: 12px; color: var(--secondary); margin-top: 1px; white-space: nowrap; }
+
+  .empty {
+    text-align: center; padding: 48px 24px; color: var(--secondary); font-size: 15px; line-height: 1.7;
+  }
+  .primary-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    margin-top: 16px; padding: 12px 22px; border: 0; border-radius: 999px;
+    background: var(--green); color: #fff; font-family: inherit;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+  }
+
+  /* リスト（支払い方法管理） */
+  .list-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 13px 14px; background: var(--card); cursor: pointer;
+    border-bottom: 0.5px solid var(--sep);
+  }
+  .list-row:last-child { border-bottom: 0; }
+  .list-row .l-main { flex: 1; min-width: 0; }
+  .list-row .l-name { font-size: 16px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .list-row .l-sub { font-size: 13px; color: var(--secondary); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .list-row .l-rate { font-size: 16px; font-weight: 600; color: var(--green); flex-shrink: 0; }
+  .list-row .chev { color: var(--tertiary); flex-shrink: 0; }
+
+  /* フォーム */
+  .form-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 0.5px solid var(--sep); }
+  .form-row:last-child { border-bottom: 0; }
+  .form-row label { font-size: 15px; color: var(--ink); flex-shrink: 0; min-width: 96px; }
+  .form-row input[type="text"], .form-row input[type="number"], .form-row input[type="tel"] {
+    flex: 1; min-width: 0; border: 0; outline: none; background: transparent;
+    font-family: inherit; font-size: 16px; text-align: right; color: var(--ink);
+  }
+  .form-row input::placeholder { color: var(--tertiary); }
+  .form-row .suffix { font-size: 15px; color: var(--secondary); flex-shrink: 0; }
+  .form-hint { font-size: 12px; color: var(--tertiary); margin: 6px 6px 0; line-height: 1.6; }
+
+  /* ルール行 */
+  .rule-row { display: flex; align-items: center; gap: 8px; padding: 11px 14px; border-bottom: 0.5px solid var(--sep); }
+  .rule-row:last-child { border-bottom: 0; }
+  .rule-tag { font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--green-soft); color: var(--green); flex-shrink: 0; }
+  .rule-desc { flex: 1; font-size: 14px; color: var(--ink); text-align: right; }
+  .rule-del {
+    width: 28px; height: 28px; border: 0; border-radius: 50%; cursor: pointer;
+    background: rgba(255,59,48,0.1); color: var(--red);
+    display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;
+  }
+
+  /* ルール追加インライン */
+  .rule-editor { padding: 12px 14px; border-top: 0.5px solid var(--sep); background: rgba(60,60,67,0.03); }
+  .rule-editor .re-label { font-size: 12px; color: var(--secondary); margin-bottom: 6px; font-weight: 500; }
+  .re-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .re-chips .chip { font-size: 13px; padding: 6px 12px; }
+  .rule-editor input[type="text"] {
+    width: 100%; border: 1px solid var(--sep); border-radius: 10px; padding: 9px 12px;
+    font-family: inherit; font-size: 15px; outline: none; background: var(--card);
+    margin-bottom: 10px;
+  }
+  .segment {
+    display: flex; background: rgba(60,60,67,0.1); border-radius: 10px; padding: 3px; margin-bottom: 10px;
+  }
+  .segment button {
+    flex: 1; border: 0; background: transparent; padding: 8px; border-radius: 8px;
+    font-family: inherit; font-size: 14px; font-weight: 500; color: var(--secondary); cursor: pointer;
+  }
+  .segment button.on { background: var(--card); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .re-rate-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .re-rate-row input {
+    flex: 1; border: 1px solid var(--sep); border-radius: 10px; padding: 9px 12px;
+    font-family: inherit; font-size: 16px; outline: none; text-align: right; background: var(--card);
+  }
+  .re-actions { display: flex; gap: 8px; }
+  .re-actions button {
+    flex: 1; padding: 10px; border-radius: 10px; border: 0; cursor: pointer;
+    font-family: inherit; font-size: 14px; font-weight: 600;
+  }
+  .re-add { background: var(--green); color: #fff; }
+  .re-add:disabled { background: rgba(60,60,67,0.15); color: var(--tertiary); }
+  .re-cancel { background: rgba(60,60,67,0.1); color: var(--ink); }
+
+  .add-rule-btn {
+    width: 100%; padding: 12px; border: 0; background: var(--card); cursor: pointer;
+    font-family: inherit; font-size: 15px; font-weight: 500; color: var(--blue);
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+
+  .danger-btn {
+    width: 100%; padding: 13px; border: 0; border-radius: 14px; background: var(--card);
+    color: var(--red); font-family: inherit; font-size: 16px; font-weight: 500; cursor: pointer;
+    margin-top: 22px;
+  }
+
+  .tools { display: flex; gap: 10px; margin-top: 22px; }
+  .tools button {
+    flex: 1; padding: 12px; border: 0; border-radius: 14px; background: var(--card);
+    color: var(--blue); font-family: inherit; font-size: 15px; font-weight: 500; cursor: pointer;
+  }
+  .version { text-align: center; padding: 14px 0 4px; font-size: 12px; color: var(--tertiary); }
+
+  /* 更新バナー */
+  #updateBanner {
+    position: fixed; left: 12px; right: 12px;
+    bottom: calc(var(--safe-bottom) + 16px); z-index: 1000;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--blue); color: #fff; border: 0; border-radius: 14px;
+    padding: 14px 18px; font-family: inherit; font-size: 14px; font-weight: 600;
+    box-shadow: 0 8px 28px rgba(0,122,255,0.4); cursor: pointer;
+    transform: translateY(140%); transition: transform 0.35s cubic-bezier(.32,.72,0,1);
+  }
+  #updateBanner.show { transform: translateY(0); }
+  #updateBanner svg { display: block; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== 比較（メイン） ===== -->
+  <div id="compareView" class="view active">
+    <div class="navbar">
+      <button class="icon-btn" id="toMethodsBtn" aria-label="支払い方法の管理">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      </button>
+      <span class="title">どれ払い</span>
+      <span style="width:36px;"></span>
+    </div>
+    <div class="scroll" id="compareScroll">
+      <div class="section-label">金額（任意）</div>
+      <div class="card amount-card">
+        <span class="yen">¥</span>
+        <input id="amountInput" type="tel" inputmode="numeric" placeholder="未入力なら還元率だけ比較" />
+        <button class="clear-btn hidden" id="amountClear" aria-label="金額をクリア">✕</button>
+      </div>
+
+      <div class="section-label">条件</div>
+      <div class="chips" id="condChips"></div>
+
+      <div class="section-label" id="memoLabel">今月のメモ</div>
+      <div class="card">
+        <textarea id="monthMemo" rows="2" placeholder="例: PayPayキャンペーンで＋0.5%上乗せ中"></textarea>
+      </div>
+
+      <div class="section-label">おすすめ順</div>
+      <div id="rankList"></div>
+    </div>
+  </div>
+
+  <!-- ===== 支払い方法管理 ===== -->
+  <div id="methodsView" class="view">
+    <div class="navbar">
+      <button class="text-btn" id="methodsBackBtn">
+        <svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><polyline points="10 2 3 10 10 18"/></svg>戻る
+      </button>
+      <span class="title">支払い方法</span>
+      <button class="icon-btn" id="addMethodBtn" aria-label="追加">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+    <div class="scroll">
+      <div id="methodList"></div>
+      <div class="section-label">換算設定</div>
+      <div class="card">
+        <div class="form-row">
+          <label>1マイルの価値</label>
+          <input type="tel" inputmode="decimal" id="mileValueInput" placeholder="2.0" />
+          <span class="suffix">円</span>
+        </div>
+      </div>
+      <div class="form-hint">単位が「マイル」の還元は、価値未入力ならこの値で円換算します（未設定なら2円）。</div>
+      <div class="tools">
+        <button id="exportBtn">書き出し</button>
+        <button id="importBtn">取り込み</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json" style="display:none;" />
+      <div class="version" id="versionLabel"></div>
+    </div>
+  </div>
+
+  <!-- ===== 追加/編集 ===== -->
+  <div id="editView" class="view">
+    <div class="navbar">
+      <button class="text-btn" id="editCancelBtn">キャンセル</button>
+      <span class="title" id="editTitle">追加</span>
+      <button class="text-btn bold" id="editSaveBtn">保存</button>
+    </div>
+    <div class="scroll">
+      <div class="section-label">基本</div>
+      <div class="card">
+        <div class="form-row">
+          <label>名前</label>
+          <input type="text" id="fName" placeholder="例: JALカード" />
+        </div>
+        <div class="form-row">
+          <label>基本還元率</label>
+          <input type="tel" inputmode="decimal" id="fRate" placeholder="1.0" />
+          <span class="suffix">%</span>
+        </div>
+      </div>
+
+      <div class="section-label">実質価値（任意）</div>
+      <div class="card">
+        <div class="form-row">
+          <label>還元の単位</label>
+          <input type="text" id="fUnit" placeholder="pt / マイル など" />
+        </div>
+        <div class="form-row">
+          <label>1単位の価値</label>
+          <input type="tel" inputmode="decimal" id="fValue" placeholder="1.0" />
+          <span class="suffix">円</span>
+        </div>
+      </div>
+      <div class="form-hint">単位に「マイル」を含むと、価値未入力でも設定値（初期2円）で自動換算されます。それ以外は未入力なら1円扱い。個別に価値を入れた場合はそちらが優先。</div>
+
+      <div class="section-label">チャージルート（任意）</div>
+      <div class="card">
+        <div id="chargeList"></div>
+        <div class="rule-editor" id="chargeEditor" style="display:none;">
+          <div class="re-label">ルート名</div>
+          <input type="text" id="ceLabel" placeholder="例: JALカード→ANA Pay" />
+          <div class="re-label">単位</div>
+          <div class="segment" id="ceUnitSeg">
+            <button type="button" data-unit="pt" class="on">ポイント（1円）</button>
+            <button type="button" data-unit="mile">マイル（設定値）</button>
+          </div>
+          <div class="re-label">還元率</div>
+          <div class="re-rate-row">
+            <input type="tel" inputmode="decimal" id="ceRate" placeholder="0.5" />
+            <span class="suffix">%</span>
+          </div>
+          <div class="re-actions">
+            <button class="re-cancel" id="ceCancelBtn">やめる</button>
+            <button class="re-add" id="ceAddBtn">追加</button>
+          </div>
+        </div>
+        <button class="add-rule-btn" id="showChargeEditorBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          チャージステップを追加
+        </button>
+      </div>
+      <div class="form-hint">チャージで貯まる分を段ごとに登録すると、支払い時の還元に合算されます。例: JALカード→ANA Pay 0.5%（マイルなら価値2円）＋ ANA Pay→Suica 0.5%。条件ボーナスは支払い時の還元にだけ効きます。</div>
+
+      <div class="section-label">条件ボーナス</div>
+      <div class="card">
+        <div id="ruleList"></div>
+        <div class="rule-editor" id="ruleEditor" style="display:none;">
+          <div class="re-label">条件タグ</div>
+          <div class="re-chips" id="reTagChips"></div>
+          <input type="text" id="reTagInput" placeholder="タグを選ぶか入力（例: コンビニ）" />
+          <div class="re-label">効き方</div>
+          <div class="segment" id="reModeSeg">
+            <button data-mode="add" class="on">＋上乗せ</button>
+            <button data-mode="set">この率に置換</button>
+          </div>
+          <div class="re-rate-row">
+            <input type="tel" inputmode="decimal" id="reRate" placeholder="0.5" />
+            <span class="suffix">%</span>
+          </div>
+          <div class="re-actions">
+            <button class="re-cancel" id="reCancelBtn">やめる</button>
+            <button class="re-add" id="reAddBtn">追加</button>
+          </div>
+        </div>
+        <button class="add-rule-btn" id="showRuleEditorBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          条件ボーナスを追加
+        </button>
+      </div>
+      <div class="form-hint">例:「ネット」で＋0.5%、「特約店」で2.0%に置換。比較画面で条件をオンにすると反映されます。</div>
+
+      <div class="section-label">メモ（任意）</div>
+      <div class="card">
+        <div class="form-row">
+          <input type="text" id="fMemo" placeholder="上限や注意点など" style="text-align:left;" />
+        </div>
+      </div>
+
+      <button class="danger-btn" id="deleteMethodBtn" style="display:none;">この支払い方法を削除</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ---------- DOM helper ----------
+  const $ = (s) => document.querySelector(s);
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+  // ---------- IndexedDB ----------
+  const DB_NAME = 'doreharai-db';
+  const DB_VERSION = 1;
+  const STORES = ['methods'];
+  let _db = null;
+
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        for (const s of STORES) {
+          if (!db.objectStoreNames.contains(s)) db.createObjectStore(s, { keyPath: 'id' });
+        }
+      };
+      req.onsuccess = () => { _db = req.result; resolve(_db); };
+      req.onerror = () => reject(req.error);
+    });
+  }
+  function tx(store, mode = 'readonly') { return _db.transaction(store, mode).objectStore(store); }
+  function getAll(store) {
+    return new Promise((res, rej) => { const r = tx(store).getAll(); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  }
+  function put(store, val) {
+    return new Promise((res, rej) => { const r = tx(store, 'readwrite').put(val); r.onsuccess = () => res(); r.onerror = () => rej(r.error); });
+  }
+  function del(store, id) {
+    return new Promise((res, rej) => { const r = tx(store, 'readwrite').delete(id); r.onsuccess = () => res(); r.onerror = () => rej(r.error); });
+  }
+
+  // ---------- バージョン ----------
+  const APP_VERSION = '1.3.0';
+  function renderVersionLabel() {
+    const el = document.getElementById('versionLabel');
+    if (el) el.textContent = 'v' + APP_VERSION;
+  }
+
+  // ---------- State ----------
+  const PRESET_TAGS = ['実店舗', 'ネット', 'タッチ決済', 'コンビニ', '公共料金', '海外'];
+  const state = {
+    methods: [],
+    activeTags: new Set(),
+    amount: null,
+    editingId: null,   // null = 新規
+    draftRules: [],    // 編集中のルール
+    draftCharges: [],  // 編集中のチャージステップ
+    reMode: 'add',
+  };
+
+  async function loadAll() {
+    state.methods = await getAll('methods');
+    state.methods.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  }
+
+  // ---------- 今月のメモ ----------
+  const MEMO_KEY = 'doreharai.monthMemo';
+  function loadMonthMemo() {
+    try { return JSON.parse(localStorage.getItem(MEMO_KEY)) || { text: '', updatedAt: 0 }; }
+    catch (e) { return { text: '', updatedAt: 0 }; }
+  }
+  function saveMonthMemo(text) {
+    localStorage.setItem(MEMO_KEY, JSON.stringify({ text, updatedAt: Date.now() }));
+  }
+  function renderMonthMemo() {
+    const memo = loadMonthMemo();
+    const ta = $('#monthMemo');
+    if (document.activeElement !== ta) ta.value = memo.text;
+    autosizeMemo();
+    const label = $('#memoLabel');
+    if (memo.text && memo.updatedAt) {
+      const d = new Date(memo.updatedAt);
+      const now = new Date();
+      const sameMonth = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+      label.innerHTML = sameMonth
+        ? '今月のメモ'
+        : `今月のメモ <span class="stale">（${d.getMonth() + 1}月に更新・要見直し）</span>`;
+    } else {
+      label.textContent = '今月のメモ';
+    }
+  }
+  function autosizeMemo() {
+    const ta = $('#monthMemo');
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
+  }
+
+  // ---------- マイル換算設定 ----------
+  const MILE_KEY = 'doreharai.mileValue';
+  function getMileValue() {
+    const v = parseFloat(localStorage.getItem(MILE_KEY));
+    return isNaN(v) || v <= 0 ? 2 : v;
+  }
+  function methodValue(method) {
+    if (method.value != null && method.value !== '') return method.value || 1;
+    return (method.unit || '').includes('マイル') ? getMileValue() : 1;
+  }
+  function chargeStepValue(c) {
+    if (c.value != null && c.value !== '') return c.value || 1;
+    return c.mile ? getMileValue() : 1;
+  }
+
+  // ---------- 計算 ----------
+  // set系: マッチした中で最大の率を基本率の代わりに採用 → add系: マッチ分を加算
+  function evaluate(method, tags) {
+    const rules = method.rules || [];
+    const matched = rules.filter((r) => tags.has(r.tag));
+    const sets = matched.filter((r) => r.mode === 'set');
+    const adds = matched.filter((r) => r.mode === 'add');
+    let base = method.baseRate || 0;
+    let usedSet = null;
+    if (sets.length) {
+      usedSet = sets.reduce((a, b) => (b.rate > a.rate ? b : a));
+      base = usedSet.rate;
+    }
+    const rate = base + adds.reduce((s, r) => s + r.rate, 0);
+    const value = methodValue(method);
+    // チャージルート: 各段の 率×価値 を無条件で合算（条件ボーナスは支払い段のみに効く）
+    const charges = method.chargeSteps || [];
+    const chargeEff = charges.reduce((s, c) => s + (c.rate || 0) * chargeStepValue(c), 0);
+    return {
+      rate,                             // 支払い段の表面還元率(%)
+      effRate: rate * value + chargeEff, // 実質還元率(% 円換算・チャージ込み)
+      value,
+      chargeEff,
+      charges,
+      matched: [...(usedSet ? [usedSet] : []), ...adds],
+    };
+  }
+
+  function fmtRate(x) {
+    const r = Math.round(x * 100) / 100;
+    return (Number.isInteger(r) ? r.toFixed(1) : String(r)) + '%';
+  }
+  function fmtYen(x) { return '約' + Math.round(x).toLocaleString('ja-JP') + '円相当'; }
+
+  // 全ルールで使われているタグ（preset順 → その他）
+  function usedTags() {
+    const used = new Set();
+    for (const m of state.methods) for (const r of m.rules || []) used.add(r.tag);
+    const ordered = PRESET_TAGS.filter((t) => used.has(t));
+    const others = [...used].filter((t) => !PRESET_TAGS.includes(t)).sort((a, b) => a.localeCompare(b, 'ja'));
+    return [...ordered, ...others];
+  }
+
+  // ---------- Render: 比較 ----------
+  function renderCompare() {
+    // 条件チップ
+    const chipsEl = $('#condChips');
+    const tags = usedTags();
+    // 消えたタグはアクティブから外す
+    for (const t of [...state.activeTags]) if (!tags.includes(t)) state.activeTags.delete(t);
+    if (!tags.length) {
+      chipsEl.innerHTML = '<div class="chips-empty">支払い方法に条件ボーナスを登録すると、ここに条件が並びます</div>';
+    } else {
+      chipsEl.innerHTML = '';
+      for (const t of tags) {
+        const b = document.createElement('button');
+        b.className = 'chip' + (state.activeTags.has(t) ? ' on' : '');
+        b.textContent = t;
+        b.addEventListener('click', () => {
+          state.activeTags.has(t) ? state.activeTags.delete(t) : state.activeTags.add(t);
+          renderCompare();
+        });
+        chipsEl.appendChild(b);
+      }
+    }
+
+    // ランキング
+    const listEl = $('#rankList');
+    if (!state.methods.length) {
+      listEl.innerHTML = '';
+      const d = document.createElement('div');
+      d.className = 'empty';
+      d.innerHTML = '支払い方法がまだありません。<br>まずは手持ちのカードやコード決済を登録しましょう。';
+      const btn = document.createElement('button');
+      btn.className = 'primary-btn';
+      btn.textContent = '＋ 支払い方法を追加';
+      btn.addEventListener('click', () => openEdit(null));
+      d.appendChild(document.createElement('br'));
+      d.appendChild(btn);
+      listEl.appendChild(d);
+      return;
+    }
+
+    const rows = state.methods.map((m) => ({ m, ev: evaluate(m, state.activeTags) }));
+    rows.sort((a, b) => b.ev.effRate - a.ev.effRate || a.m.name.localeCompare(b.m.name, 'ja'));
+
+    listEl.innerHTML = '';
+    rows.forEach(({ m, ev }, i) => {
+      const card = document.createElement('div');
+      card.className = 'rank-card' + (i === 0 ? ' top' : '');
+
+      const badges = ev.matched.map((r) =>
+        `<span class="badge">${esc(r.tag)} ${r.mode === 'set' ? '→' : '+'}${trimPct(r.rate)}%</span>`
+      ).join('');
+      const valueNote = ev.value !== 1
+        ? `<span class="badge base">率${trimPct(ev.rate)}% × ${trimPct(ev.value)}円</span>` : '';
+      const chargeBadges = ev.charges.map((c) => {
+        const v = chargeStepValue(c);
+        return `<span class="badge base">${esc(c.label || 'チャージ')} +${trimPct(c.rate)}%${v !== 1 ? '×' + trimPct(v) + '円' : ''}</span>`;
+      }).join('');
+      const memoNote = m.memo ? `<span class="badge base">${esc(m.memo)}</span>` : '';
+
+      const sub = state.amount != null
+        ? fmtYen(state.amount * ev.effRate / 100)
+        : (m.unit ? esc(m.unit) : '');
+
+      card.innerHTML = `
+        <div class="rank-num">${i + 1}</div>
+        <div class="rank-main">
+          <div class="rank-name">${esc(m.name)}</div>
+          <div class="rank-badges">${badges}${valueNote}${chargeBadges}${memoNote}</div>
+        </div>
+        <div class="rank-right">
+          <div class="rank-rate">${fmtRate(ev.effRate)}</div>
+          <div class="rank-sub">${sub}</div>
+        </div>`;
+      card.addEventListener('click', () => openEdit(m.id));
+      listEl.appendChild(card);
+    });
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  function trimPct(x) {
+    const r = Math.round(x * 100) / 100;
+    return Number.isInteger(r) ? String(r) : String(r);
+  }
+
+  // ---------- Render: 支払い方法一覧 ----------
+  function renderMethods() {
+    const stored = localStorage.getItem(MILE_KEY);
+    const mvEl = $('#mileValueInput');
+    if (mvEl && document.activeElement !== mvEl) mvEl.value = stored != null ? stored : '';
+    const listEl = $('#methodList');
+    listEl.innerHTML = '';
+    if (!state.methods.length) {
+      const d = document.createElement('div');
+      d.className = 'empty';
+      d.textContent = '右上の＋から追加できます';
+      listEl.appendChild(d);
+      return;
+    }
+    const card = document.createElement('div');
+    card.className = 'card';
+    for (const m of state.methods) {
+      const row = document.createElement('div');
+      row.className = 'list-row';
+      const ruleCount = (m.rules || []).length;
+      const chargeCount = (m.chargeSteps || []).length;
+      const subParts = [];
+      if (m.unit) subParts.push(m.unit);
+      if (chargeCount) subParts.push(`チャージ ${chargeCount}段`);
+      if (ruleCount) subParts.push(`条件 ${ruleCount}件`);
+      if (m.memo) subParts.push(m.memo);
+      row.innerHTML = `
+        <div class="l-main">
+          <div class="l-name">${esc(m.name)}</div>
+          ${subParts.length ? `<div class="l-sub">${esc(subParts.join(' ・ '))}</div>` : ''}
+        </div>
+        <div class="l-rate">${fmtRate(m.baseRate || 0)}</div>
+        <svg class="chev" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 1 7 7 1 13"/></svg>`;
+      row.addEventListener('click', () => openEdit(m.id));
+      card.appendChild(row);
+    }
+    listEl.appendChild(card);
+  }
+
+  // ---------- Render: 編集 ----------
+  function openEdit(id) {
+    state.editingId = id;
+    const m = id ? state.methods.find((x) => x.id === id) : null;
+    $('#editTitle').textContent = m ? '編集' : '追加';
+    $('#fName').value = m ? m.name : '';
+    $('#fRate').value = m ? String(m.baseRate) : '';
+    $('#fUnit').value = m && m.unit ? m.unit : '';
+    $('#fValue').value = m && m.value != null && m.value !== '' ? String(m.value) : '';
+    $('#fMemo').value = m && m.memo ? m.memo : '';
+    state.draftRules = m ? (m.rules || []).map((r) => ({ ...r })) : [];
+    state.draftCharges = m ? (m.chargeSteps || []).map((c) => ({ ...c })) : [];
+    $('#deleteMethodBtn').style.display = m ? 'block' : 'none';
+    hideRuleEditor();
+    hideChargeEditor();
+    renderDraftRules();
+    renderDraftCharges();
+    showView('editView');
+    if (!m) setTimeout(() => $('#fName').focus(), 60);
+  }
+
+  function renderDraftCharges() {
+    const el = $('#chargeList');
+    el.innerHTML = '';
+    state.draftCharges.forEach((c, i) => {
+      const v = chargeStepValue(c);
+      const unitNote = c.mile ? `（マイル・${trimPct(v)}円換算）` : (v !== 1 ? ` × ${trimPct(v)}円` : '');
+      const row = document.createElement('div');
+      row.className = 'rule-row';
+      row.innerHTML = `
+        <span class="rule-tag">${esc(c.label || 'チャージ')}</span>
+        <span class="rule-desc">＋${trimPct(c.rate)}%${unitNote}</span>`;
+      const delBtn = document.createElement('button');
+      delBtn.className = 'rule-del';
+      delBtn.textContent = '✕';
+      delBtn.addEventListener('click', () => { state.draftCharges.splice(i, 1); renderDraftCharges(); });
+      row.appendChild(delBtn);
+      el.appendChild(row);
+    });
+  }
+
+  function showChargeEditor() {
+    $('#chargeEditor').style.display = 'block';
+    $('#showChargeEditorBtn').style.display = 'none';
+    $('#ceLabel').value = '';
+    $('#ceRate').value = '';
+    setCeUnit('pt');
+    updateCeAddState();
+    setTimeout(() => $('#ceLabel').focus(), 60);
+  }
+  function hideChargeEditor() {
+    $('#chargeEditor').style.display = 'none';
+    $('#showChargeEditorBtn').style.display = 'flex';
+  }
+  function setCeUnit(unit) {
+    state.ceUnit = unit;
+    [...$('#ceUnitSeg').children].forEach((b) => b.classList.toggle('on', b.dataset.unit === unit));
+  }
+  function updateCeAddState() {
+    const rate = parseFloat($('#ceRate').value);
+    $('#ceAddBtn').disabled = isNaN(rate) || rate < 0;
+  }
+
+  function renderDraftRules() {
+    const el = $('#ruleList');
+    el.innerHTML = '';
+    state.draftRules.forEach((r, i) => {
+      const row = document.createElement('div');
+      row.className = 'rule-row';
+      row.innerHTML = `
+        <span class="rule-tag">${esc(r.tag)}</span>
+        <span class="rule-desc">${r.mode === 'set' ? trimPct(r.rate) + '% に置換' : '＋' + trimPct(r.rate) + '%'}</span>`;
+      const delBtn = document.createElement('button');
+      delBtn.className = 'rule-del';
+      delBtn.textContent = '✕';
+      delBtn.addEventListener('click', () => { state.draftRules.splice(i, 1); renderDraftRules(); });
+      row.appendChild(delBtn);
+      el.appendChild(row);
+    });
+  }
+
+  function showRuleEditor() {
+    $('#ruleEditor').style.display = 'block';
+    $('#showRuleEditorBtn').style.display = 'none';
+    // タグ候補チップ（preset + 既存で使われているタグ）
+    const cand = [...new Set([...PRESET_TAGS, ...usedTags(), ...state.draftRules.map((r) => r.tag)])];
+    const chipsEl = $('#reTagChips');
+    chipsEl.innerHTML = '';
+    for (const t of cand) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip';
+      b.textContent = t;
+      b.addEventListener('click', () => {
+        $('#reTagInput').value = t;
+        [...chipsEl.children].forEach((c) => c.classList.toggle('on', c === b));
+        updateReAddState();
+      });
+      chipsEl.appendChild(b);
+    }
+    $('#reTagInput').value = '';
+    $('#reRate').value = '';
+    setReMode('add');
+    updateReAddState();
+  }
+  function hideRuleEditor() {
+    $('#ruleEditor').style.display = 'none';
+    $('#showRuleEditorBtn').style.display = 'flex';
+  }
+  function setReMode(mode) {
+    state.reMode = mode;
+    [...$('#reModeSeg').children].forEach((b) => b.classList.toggle('on', b.dataset.mode === mode));
+  }
+  function updateReAddState() {
+    const tag = $('#reTagInput').value.trim();
+    const rate = parseFloat($('#reRate').value);
+    $('#reAddBtn').disabled = !tag || isNaN(rate) || rate < 0;
+  }
+
+  // ---------- View切替 ----------
+  function showView(id) {
+    document.querySelectorAll('.view').forEach((v) => v.classList.toggle('active', v.id === id));
+    if (id === 'compareView') { renderCompare(); renderMonthMemo(); }
+    if (id === 'methodsView') renderMethods();
+  }
+
+  // ---------- 保存/削除 ----------
+  async function saveMethod() {
+    const name = $('#fName').value.trim();
+    const rate = parseFloat($('#fRate').value);
+    if (!name) { $('#fName').focus(); return; }
+    if (isNaN(rate) || rate < 0) { $('#fRate').focus(); return; }
+    const valueRaw = $('#fValue').value.trim();
+    const value = valueRaw === '' ? null : (parseFloat(valueRaw) || 1);
+    const existing = state.editingId ? state.methods.find((x) => x.id === state.editingId) : null;
+    const m = {
+      id: existing ? existing.id : uid(),
+      name,
+      baseRate: rate,
+      unit: $('#fUnit').value.trim(),
+      value,
+      rules: state.draftRules,
+      chargeSteps: state.draftCharges,
+      memo: $('#fMemo').value.trim(),
+      createdAt: existing ? (existing.createdAt || Date.now()) : Date.now(),
+      updatedAt: Date.now(),
+    };
+    await put('methods', m);
+    await loadAll();
+    showView('compareView');
+  }
+
+  async function deleteMethod() {
+    if (!state.editingId) return;
+    if (!confirm('この支払い方法を削除しますか？')) return;
+    await del('methods', state.editingId);
+    await loadAll();
+    showView('methodsView');
+  }
+
+  // ---------- JSON 書き出し/取り込み ----------
+  const SCHEMA = 'doreharai.v1';
+  async function exportData() {
+    const data = {
+      schema: SCHEMA,
+      exportedAt: new Date().toISOString(),
+      methods: state.methods,
+      settings: { mileValue: localStorage.getItem(MILE_KEY), monthMemo: loadMonthMemo() },
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'doreharai-sync.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  async function importData(file) {
+    try {
+      const data = JSON.parse(await file.text());
+      if (data.schema !== SCHEMA) { alert('どれ払いの書き出しファイルではありません'); return; }
+      const localById = new Map(state.methods.map((n) => [n.id, n]));
+      for (const it of (data.methods || [])) {
+        const local = localById.get(it.id);
+        if (!local || (it.updatedAt || 0) > (local.updatedAt || 0)) await put('methods', it);
+      }
+      if (data.settings) {
+        if (data.settings.mileValue != null) localStorage.setItem(MILE_KEY, data.settings.mileValue);
+        const im = data.settings.monthMemo;
+        if (im && (im.updatedAt || 0) > (loadMonthMemo().updatedAt || 0)) {
+          localStorage.setItem(MEMO_KEY, JSON.stringify(im));
+        }
+      }
+      await loadAll();
+      renderMethods();
+      alert('取り込みました');
+    } catch (e) {
+      alert('取り込みに失敗しました');
+    }
+  }
+
+  // ---------- バインド ----------
+  $('#toMethodsBtn').addEventListener('click', () => showView('methodsView'));
+  $('#methodsBackBtn').addEventListener('click', () => showView('compareView'));
+  $('#addMethodBtn').addEventListener('click', () => openEdit(null));
+  $('#editCancelBtn').addEventListener('click', () => showView(state.editingId ? 'methodsView' : 'compareView'));
+  $('#editSaveBtn').addEventListener('click', saveMethod);
+  $('#deleteMethodBtn').addEventListener('click', deleteMethod);
+  $('#showRuleEditorBtn').addEventListener('click', showRuleEditor);
+  $('#reCancelBtn').addEventListener('click', hideRuleEditor);
+  $('#reModeSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (b) setReMode(b.dataset.mode);
+  });
+  $('#reTagInput').addEventListener('input', updateReAddState);
+  $('#reRate').addEventListener('input', updateReAddState);
+  $('#reAddBtn').addEventListener('click', () => {
+    const tag = $('#reTagInput').value.trim();
+    const rate = parseFloat($('#reRate').value);
+    if (!tag || isNaN(rate)) return;
+    state.draftRules.push({ tag, mode: state.reMode, rate });
+    renderDraftRules();
+    hideRuleEditor();
+  });
+
+  $('#showChargeEditorBtn').addEventListener('click', showChargeEditor);
+  $('#ceCancelBtn').addEventListener('click', hideChargeEditor);
+  $('#ceRate').addEventListener('input', updateCeAddState);
+  $('#ceUnitSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (b) setCeUnit(b.dataset.unit);
+  });
+  $('#ceAddBtn').addEventListener('click', () => {
+    const rate = parseFloat($('#ceRate').value);
+    if (isNaN(rate) || rate < 0) return;
+    state.draftCharges.push({ label: $('#ceLabel').value.trim(), rate, mile: state.ceUnit === 'mile' });
+    renderDraftCharges();
+    hideChargeEditor();
+  });
+
+  $('#mileValueInput').addEventListener('input', () => {
+    const raw = $('#mileValueInput').value.trim();
+    if (raw === '') localStorage.removeItem(MILE_KEY);
+    else localStorage.setItem(MILE_KEY, raw);
+  });
+
+  $('#monthMemo').addEventListener('input', () => {
+    saveMonthMemo($('#monthMemo').value);
+    autosizeMemo();
+  });
+  $('#monthMemo').addEventListener('blur', renderMonthMemo);
+
+  const amountInput = $('#amountInput');
+  amountInput.addEventListener('input', () => {
+    const raw = amountInput.value.replace(/[^\d]/g, '');
+    state.amount = raw === '' ? null : parseInt(raw, 10);
+    if (raw !== '') amountInput.value = parseInt(raw, 10).toLocaleString('ja-JP');
+    else amountInput.value = '';
+    $('#amountClear').classList.toggle('hidden', raw === '');
+    renderCompare();
+  });
+  $('#amountClear').addEventListener('click', () => {
+    amountInput.value = '';
+    state.amount = null;
+    $('#amountClear').classList.add('hidden');
+    renderCompare();
+  });
+
+  $('#exportBtn').addEventListener('click', exportData);
+  $('#importBtn').addEventListener('click', () => $('#importFile').click());
+  $('#importFile').addEventListener('change', (e) => {
+    if (e.target.files && e.target.files[0]) importData(e.target.files[0]);
+    e.target.value = '';
+  });
+
+  // ---------- 起動 ----------
+  (async function init() {
+    setupViewportTracking();
+    await openDB();
+    await loadAll();
+    renderCompare();
+    renderMonthMemo();
+    renderVersionLabel();
+  })();
+
+  // ---------- visualViewport（キーボード対策） ----------
+  function setupViewportTracking() {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const root = document.documentElement;
+    let baseHeight = vv.height;
+    function apply() {
+      root.style.setProperty('--app-height', vv.height + 'px');
+      document.body.classList.toggle('keyboard-open', vv.height < baseHeight - 120);
+    }
+    vv.addEventListener('resize', apply);
+    vv.addEventListener('scroll', apply);
+    window.addEventListener('orientationchange', () => { setTimeout(() => { baseHeight = vv.height; apply(); }, 300); });
+    apply();
+  }
+
+  // ---------- Service Worker + 自動アップデート ----------
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', async () => {
+      try {
+        const swUrl = new URL('sw.js', location.href).href;
+        const res = await fetch(swUrl, { method: 'HEAD' });
+        if (!res.ok) return;
+        const reg = await navigator.serviceWorker.register('sw.js');
+        if (reg.waiting && navigator.serviceWorker.controller) showUpdateBanner(reg.waiting);
+        reg.addEventListener('updatefound', () => {
+          const sw = reg.installing;
+          if (!sw) return;
+          sw.addEventListener('statechange', () => {
+            if (sw.state === 'installed' && navigator.serviceWorker.controller) showUpdateBanner(sw);
+          });
+        });
+        reg.update();
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update(); });
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (refreshing) return; refreshing = true; window.location.reload();
+        });
+      } catch (e) {}
+    });
+  }
+  function showUpdateBanner(waitingSW) {
+    if (document.getElementById('updateBanner')) return;
+    const b = document.createElement('button');
+    b.id = 'updateBanner';
+    b.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg><span>新しいバージョンがあります — タップで更新</span>';
+    b.addEventListener('click', () => {
+      b.disabled = true; b.querySelector('span').textContent = '更新中…';
+      waitingSW.postMessage('SKIP_WAITING');
+    });
+    document.body.appendChild(b);
+    requestAnimationFrame(() => b.classList.add('show'));
+  }
+</script>
+</body>
+</html>
