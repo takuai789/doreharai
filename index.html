@@ -32,6 +32,7 @@
     --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  input, textarea { scroll-margin: 90px; }
   html, body { height: 100%; overflow: hidden; background: var(--bg); }
   body {
     font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
@@ -462,7 +463,7 @@
   }
 
   // ---------- バージョン ----------
-  const APP_VERSION = '1.3.0';
+  const APP_VERSION = '1.3.1';
   function renderVersionLabel() {
     const el = document.getElementById('versionLabel');
     if (el) el.textContent = 'v' + APP_VERSION;
@@ -992,12 +993,25 @@
     let baseHeight = vv.height;
     function apply() {
       root.style.setProperty('--app-height', vv.height + 'px');
+      // iOSがキーボード表示時にページごと押し上げるのを打ち消す
+      if (window.scrollY !== 0 || vv.offsetTop !== 0) window.scrollTo(0, 0);
       document.body.classList.toggle('keyboard-open', vv.height < baseHeight - 120);
     }
     vv.addEventListener('resize', apply);
     vv.addEventListener('scroll', apply);
     window.addEventListener('orientationchange', () => { setTimeout(() => { baseHeight = vv.height; apply(); }, 300); });
     apply();
+
+    // フォーカスした入力欄をキーボードの上に自動スクロール
+    document.addEventListener('focusin', (e) => {
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) {
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          t.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }, 300);
+      }
+    });
   }
 
   // ---------- Service Worker + 自動アップデート ----------
