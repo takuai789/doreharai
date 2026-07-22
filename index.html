@@ -147,6 +147,12 @@
   .rank-rate { font-size: 20px; font-weight: 700; color: var(--green); white-space: nowrap; }
   .rank-card:not(.top) .rank-rate { color: var(--ink); }
   .rank-sub { font-size: 12px; color: var(--secondary); margin-top: 1px; white-space: nowrap; }
+  .rank-diff {
+    font-size: 12px; font-weight: 600; margin-top: 3px; white-space: nowrap;
+    color: #C2410C;
+  }
+  .rank-diff.best { color: var(--green); }
+  .rank-diff.same { color: var(--secondary); font-weight: 500; }
 
   .empty {
     text-align: center; padding: 48px 24px; color: var(--secondary); font-size: 15px; line-height: 1.7;
@@ -170,6 +176,13 @@
   .list-row .l-sub { font-size: 13px; color: var(--secondary); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .list-row .l-rate { font-size: 16px; font-weight: 600; color: var(--green); flex-shrink: 0; }
   .list-row .chev { color: var(--tertiary); flex-shrink: 0; }
+  .sorter { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; margin-left: 2px; }
+  .sort-btn {
+    width: 32px; height: 24px; border: 0; border-radius: 7px; cursor: pointer;
+    background: rgba(60,60,67,0.08); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sort-btn:disabled { color: var(--tertiary); background: rgba(60,60,67,0.04); }
 
   /* フォーム */
   .form-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 0.5px solid var(--sep); }
@@ -344,19 +357,21 @@
         </div>
       </div>
 
-      <div class="section-label">実質価値（任意）</div>
+      <div class="section-label">還元の単位</div>
       <div class="card">
-        <div class="form-row">
-          <label>還元の単位</label>
-          <input type="text" id="fUnit" placeholder="pt / マイル など" />
+        <div style="padding: 12px 14px 4px;">
+          <div class="segment" id="fUnitSeg" style="margin-bottom: 4px;">
+            <button type="button" data-unit="pt" class="on">ポイント（1円）</button>
+            <button type="button" data-unit="mile">マイル（設定値）</button>
+          </div>
         </div>
         <div class="form-row">
-          <label>1単位の価値</label>
-          <input type="tel" inputmode="decimal" id="fValue" placeholder="1.0" />
+          <label>価値を上書き</label>
+          <input type="tel" inputmode="decimal" id="fValue" placeholder="任意" />
           <span class="suffix">円</span>
         </div>
       </div>
-      <div class="form-hint">単位に「マイル」を含むと、価値未入力でも設定値（初期2円）で自動換算されます。それ以外は未入力なら1円扱い。個別に価値を入れた場合はそちらが優先。</div>
+      <div class="form-hint">マイルを選ぶと、換算設定の「1マイルの価値」（初期2円）で自動換算されます。特定のカードだけ別評価したいときのみ、上書きに数値を入れてください。</div>
 
       <div class="section-label">チャージルート（任意）</div>
       <div class="card">
@@ -463,7 +478,7 @@
   }
 
   // ---------- バージョン ----------
-  const APP_VERSION = '1.3.1';
+  const APP_VERSION = '1.5.0';
   function renderVersionLabel() {
     const el = document.getElementById('versionLabel');
     if (el) el.textContent = 'v' + APP_VERSION;
@@ -479,11 +494,36 @@
     draftRules: [],    // 編集中のルール
     draftCharges: [],  // 編集中のチャージステップ
     reMode: 'add',
+    fUnit: 'pt',
+    ceUnit: 'pt',
   };
 
   async function loadAll() {
     state.methods = await getAll('methods');
-    state.methods.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    state.methods.sort((a, b) => {
+      const ao = a.order, bo = b.order;
+      if (ao != null && bo != null) return ao - bo;
+      if (ao != null) return -1;
+      if (bo != null) return 1;
+      return (a.createdAt || 0) - (b.createdAt || 0);
+    });
+    // order未設定のものに現在の並びで採番
+    state.methods.forEach((m, i) => { m.order = i; });
+  }
+
+  async function persistOrder() {
+    state.methods.forEach((m, i) => { m.order = i; });
+    for (const m of state.methods) await put('methods', m);
+  }
+
+  async function moveMethod(id, dir) {
+    const i = state.methods.findIndex((m) => m.id === id);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= state.methods.length) return;
+    const arr = state.methods;
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+    await persistOrder();
+    renderMethods();
   }
 
   // ---------- 今月のメモ ----------
@@ -524,9 +564,16 @@
     const v = parseFloat(localStorage.getItem(MILE_KEY));
     return isNaN(v) || v <= 0 ? 2 : v;
   }
+  function isMileMethod(method) {    if (method.unit === 'mile') return true;
+    if (method.unit === 'pt') return false;
+    return (method.unit || '').includes('マイル'); // 旧データ互換
+  }
   function methodValue(method) {
     if (method.value != null && method.value !== '') return method.value || 1;
-    return (method.unit || '').includes('マイル') ? getMileValue() : 1;
+    return isMileMethod(method) ? getMileValue() : 1;
+  }
+  function unitLabel(method) {
+    return isMileMethod(method) ? 'マイル' : 'ポイント';
   }
   function chargeStepValue(c) {
     if (c.value != null && c.value !== '') return c.value || 1;
@@ -617,9 +664,10 @@
     }
 
     const rows = state.methods.map((m) => ({ m, ev: evaluate(m, state.activeTags) }));
-    rows.sort((a, b) => b.ev.effRate - a.ev.effRate || a.m.name.localeCompare(b.m.name, 'ja'));
+    rows.sort((a, b) => b.ev.effRate - a.ev.effRate || (a.m.order ?? 0) - (b.m.order ?? 0));
 
     listEl.innerHTML = '';
+    const topEff = rows.length ? rows[0].ev.effRate : 0;
     rows.forEach(({ m, ev }, i) => {
       const card = document.createElement('div');
       card.className = 'rank-card' + (i === 0 ? ' top' : '');
@@ -635,9 +683,20 @@
       }).join('');
       const memoNote = m.memo ? `<span class="badge base">${esc(m.memo)}</span>` : '';
 
-      const sub = state.amount != null
-        ? fmtYen(state.amount * ev.effRate / 100)
-        : (m.unit ? esc(m.unit) : '');
+      let sub, diffLine = '';
+      if (state.amount != null) {
+        sub = fmtYen(state.amount * ev.effRate / 100);
+        const diff = state.amount * (topEff - ev.effRate) / 100;
+        if (i === 0) {
+          diffLine = rows.length > 1 ? '<div class="rank-diff best">ベスト</div>' : '';
+        } else if (Math.round(diff) === 0) {
+          diffLine = '<div class="rank-diff same">同額</div>';
+        } else {
+          diffLine = `<div class="rank-diff">−${Math.round(diff).toLocaleString('ja-JP')}円</div>`;
+        }
+      } else {
+        sub = unitLabel(m);
+      }
 
       card.innerHTML = `
         <div class="rank-num">${i + 1}</div>
@@ -648,6 +707,7 @@
         <div class="rank-right">
           <div class="rank-rate">${fmtRate(ev.effRate)}</div>
           <div class="rank-sub">${sub}</div>
+          ${diffLine}
         </div>`;
       card.addEventListener('click', () => openEdit(m.id));
       listEl.appendChild(card);
@@ -678,27 +738,43 @@
     }
     const card = document.createElement('div');
     card.className = 'card';
-    for (const m of state.methods) {
+    state.methods.forEach((m, idx) => {
       const row = document.createElement('div');
       row.className = 'list-row';
       const ruleCount = (m.rules || []).length;
       const chargeCount = (m.chargeSteps || []).length;
-      const subParts = [];
-      if (m.unit) subParts.push(m.unit);
+      const subParts = [unitLabel(m)];
       if (chargeCount) subParts.push(`チャージ ${chargeCount}段`);
       if (ruleCount) subParts.push(`条件 ${ruleCount}件`);
       if (m.memo) subParts.push(m.memo);
       row.innerHTML = `
         <div class="l-main">
           <div class="l-name">${esc(m.name)}</div>
-          ${subParts.length ? `<div class="l-sub">${esc(subParts.join(' ・ '))}</div>` : ''}
+          <div class="l-sub">${esc(subParts.join(' ・ '))}</div>
         </div>
-        <div class="l-rate">${fmtRate(m.baseRate || 0)}</div>
-        <svg class="chev" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 1 7 7 1 13"/></svg>`;
+        <div class="l-rate">${fmtRate(m.baseRate || 0)}</div>`;
+      const sorter = document.createElement('div');
+      sorter.className = 'sorter';
+      const up = document.createElement('button');
+      up.className = 'sort-btn';
+      up.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 15 12 8 19 15"/></svg>';
+      up.disabled = idx === 0;
+      up.addEventListener('click', (e) => { e.stopPropagation(); moveMethod(m.id, -1); });
+      const down = document.createElement('button');
+      down.className = 'sort-btn';
+      down.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 9 12 16 19 9"/></svg>';
+      down.disabled = idx === state.methods.length - 1;
+      down.addEventListener('click', (e) => { e.stopPropagation(); moveMethod(m.id, 1); });
+      sorter.appendChild(up); sorter.appendChild(down);
+      row.appendChild(sorter);
       row.addEventListener('click', () => openEdit(m.id));
       card.appendChild(row);
-    }
+    });
     listEl.appendChild(card);
+    const hint = document.createElement('div');
+    hint.className = 'form-hint';
+    hint.textContent = '↑↓ で並べ替えた順が「おすすめ度」です。還元率が同じときはこの順で上に表示されます。';
+    listEl.appendChild(hint);
   }
 
   // ---------- Render: 編集 ----------
@@ -708,7 +784,7 @@
     $('#editTitle').textContent = m ? '編集' : '追加';
     $('#fName').value = m ? m.name : '';
     $('#fRate').value = m ? String(m.baseRate) : '';
-    $('#fUnit').value = m && m.unit ? m.unit : '';
+    setFUnit(m && isMileMethod(m) ? 'mile' : 'pt');
     $('#fValue').value = m && m.value != null && m.value !== '' ? String(m.value) : '';
     $('#fMemo').value = m && m.memo ? m.memo : '';
     state.draftRules = m ? (m.rules || []).map((r) => ({ ...r })) : [];
@@ -758,6 +834,10 @@
   function setCeUnit(unit) {
     state.ceUnit = unit;
     [...$('#ceUnitSeg').children].forEach((b) => b.classList.toggle('on', b.dataset.unit === unit));
+  }
+  function setFUnit(unit) {
+    state.fUnit = unit;
+    [...$('#fUnitSeg').children].forEach((b) => b.classList.toggle('on', b.dataset.unit === unit));
   }
   function updateCeAddState() {
     const rate = parseFloat($('#ceRate').value);
@@ -840,11 +920,12 @@
       id: existing ? existing.id : uid(),
       name,
       baseRate: rate,
-      unit: $('#fUnit').value.trim(),
+      unit: state.fUnit || 'pt',
       value,
       rules: state.draftRules,
       chargeSteps: state.draftCharges,
       memo: $('#fMemo').value.trim(),
+      order: existing && existing.order != null ? existing.order : state.methods.length,
       createdAt: existing ? (existing.createdAt || Date.now()) : Date.now(),
       updatedAt: Date.now(),
     };
@@ -923,6 +1004,11 @@
     state.draftRules.push({ tag, mode: state.reMode, rate });
     renderDraftRules();
     hideRuleEditor();
+  });
+
+  $('#fUnitSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (b) setFUnit(b.dataset.unit);
   });
 
   $('#showChargeEditorBtn').addEventListener('click', showChargeEditor);
