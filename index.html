@@ -328,8 +328,8 @@
       </div>
       <div class="form-hint">単位が「マイル」の還元は、価値未入力ならこの値で円換算します（未設定なら2円）。</div>
       <div class="tools">
-        <button id="exportBtn">書き出し</button>
-        <button id="importBtn">取り込み</button>
+        <button id="exportBtn">データを書き出す（バックアップ）</button>
+        <button id="importBtn">データを取り込む</button>
       </div>
       <input type="file" id="importFile" accept="application/json" style="display:none;" />
       <div class="version" id="versionLabel"></div>
@@ -478,7 +478,7 @@
   }
 
   // ---------- バージョン ----------
-  const APP_VERSION = '1.6.0';
+  const APP_VERSION = '1.7.0';
   function renderVersionLabel() {
     const el = document.getElementById('versionLabel');
     if (el) el.textContent = 'v' + APP_VERSION;
@@ -976,7 +976,7 @@
   async function importData(file) {
     try {
       const data = JSON.parse(await file.text());
-      if (data.schema !== SCHEMA) { alert('どれ払いの書き出しファイルではありません'); return; }
+      if (data.schema !== SCHEMA) { uiToast('どれ払いの書き出しファイルではありません'); return; }
       const localById = new Map(state.methods.map((n) => [n.id, n]));
       for (const it of (data.methods || [])) {
         const local = localById.get(it.id);
@@ -991,9 +991,9 @@
       }
       await loadAll();
       renderMethods();
-      alert('取り込みました');
+      uiToast('取り込みました');
     } catch (e) {
-      alert('取り込みに失敗しました');
+      uiToast('取り込めませんでした');
     }
   }
 
@@ -1152,6 +1152,14 @@
     document.body.appendChild(b);
     requestAnimationFrame(() => b.classList.add('show'));
   }
+</script>
+<div id="ui-toast" style="position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 16px);transform:translateX(-50%);background:rgba(28,28,30,.94);color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;z-index:9000;opacity:0;pointer-events:none;transition:opacity .25s;max-width:90vw;text-align:center;font-family:inherit"></div>
+<div id="ui-ask" style="position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:9001;padding:24px"><div style="background:#fff;color:#1c1c1e;border-radius:16px;padding:20px 18px 14px;max-width:330px;width:100%;font-family:inherit"><p id="ui-ask-msg" style="margin:0 0 16px;font-size:15px;line-height:1.7;white-space:pre-line;text-align:center"></p><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button type="button" id="ui-ask-no" style="padding:11px;border-radius:10px;border:0;background:rgba(0,0,0,.07);color:inherit;font:inherit;font-size:15px;font-weight:700">やめる</button><button type="button" id="ui-ask-yes" style="padding:11px;border-radius:10px;border:0;background:#E5484D;color:#fff;font:inherit;font-size:15px;font-weight:700">OK</button></div></div></div>
+<script>
+  // 自前のお知らせ・確認（iPhoneのホーム画面アプリでは alert/confirm が出ないことがあるため）
+  let _uiT = 0;
+  function uiToast(msg){ const t=document.getElementById('ui-toast'); t.textContent=msg; t.style.opacity='1'; clearTimeout(_uiT); _uiT=setTimeout(()=>{t.style.opacity='0';}, 2400); }
+  function uiAsk(msg, yes){ return new Promise(res=>{ const bg=document.getElementById('ui-ask'); document.getElementById('ui-ask-msg').textContent=msg; const y=document.getElementById('ui-ask-yes'), n=document.getElementById('ui-ask-no'); y.textContent=yes||'OK'; bg.style.display='flex'; const done=v=>{ bg.style.display='none'; y.onclick=n.onclick=null; res(v); }; y.onclick=()=>done(true); n.onclick=()=>done(false); }); }
 </script>
 </body>
 </html>
