@@ -143,6 +143,7 @@
     background: var(--green-soft); color: var(--green);
   }
   .badge.base { background: rgba(60,60,67,0.08); color: var(--secondary); font-weight: 500; }
+  .badge.neg { background: rgba(255,59,48,0.10); color: #D9483F; font-weight: 600; }
   .rank-right { text-align: right; flex-shrink: 0; }
   .rank-rate { font-size: 20px; font-weight: 700; color: var(--green); white-space: nowrap; }
   .rank-card:not(.top) .rank-rate { color: var(--ink); }
@@ -201,6 +202,7 @@
   .rule-row:last-child { border-bottom: 0; }
   .rule-tag { font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--green-soft); color: var(--green); flex-shrink: 0; }
   .rule-desc { flex: 1; font-size: 14px; color: var(--ink); text-align: right; }
+  .rule-desc.neg { color: #D9483F; }
   .rule-del {
     width: 28px; height: 28px; border: 0; border-radius: 50%; cursor: pointer;
     background: rgba(255,59,48,0.1); color: var(--red);
@@ -384,6 +386,11 @@
             <button type="button" data-unit="pt" class="on">ポイント（1円）</button>
             <button type="button" data-unit="mile">マイル（設定値）</button>
           </div>
+          <div class="re-label">プラスかマイナスか</div>
+          <div class="segment" id="ceSignSeg">
+            <button type="button" data-sign="1" class="on">＋ 貯まる</button>
+            <button type="button" data-sign="-1">− 引かれる（手数料など）</button>
+          </div>
           <div class="re-label">還元率</div>
           <div class="re-rate-row">
             <input type="tel" inputmode="decimal" id="ceRate" placeholder="0.5" />
@@ -399,7 +406,7 @@
           チャージステップを追加
         </button>
       </div>
-      <div class="form-hint">チャージで貯まる分を段ごとに登録すると、支払い時の還元に合算されます。例: JALカード→ANA Pay 0.5%（マイルなら価値2円）＋ ANA Pay→Suica 0.5%。条件ボーナスは支払い時の還元にだけ効きます。</div>
+      <div class="form-hint">チャージで貯まる分を段ごとに登録すると、支払い時の還元に合算されます。チャージ手数料や、ポイント交換で目減りする分は「− 引かれる」で登録すると差し引かれます。例: JALカード→ANA Pay 0.5%（マイルなら価値2円）＋ ANA Pay→Suica 0.5%。条件ボーナスは支払い時の還元にだけ効きます。</div>
 
       <div class="section-label">条件ボーナス</div>
       <div class="card">
@@ -478,7 +485,7 @@
   }
 
   // ---------- バージョン ----------
-  const APP_VERSION = '1.8.0';
+  const APP_VERSION = '1.9.0';
   function renderVersionLabel() {
     const el = document.getElementById('versionLabel');
     if (el) el.textContent = 'v' + APP_VERSION;
@@ -679,7 +686,8 @@
         ? `<span class="badge base">率${trimPct(ev.rate)}% × ${trimPct(ev.value)}円</span>` : '';
       const chargeBadges = ev.charges.map((c) => {
         const v = chargeStepValue(c);
-        return `<span class="badge base">${esc(c.label || 'チャージ')} +${trimPct(c.rate)}%${v !== 1 ? '×' + trimPct(v) + '円' : ''}</span>`;
+        const neg = (c.rate || 0) < 0;
+        return `<span class="badge ${neg ? 'neg' : 'base'}">${esc(c.label || 'チャージ')} ${neg ? '−' : '+'}${trimPct(Math.abs(c.rate))}%${v !== 1 ? '×' + trimPct(v) + '円' : ''}</span>`;
       }).join('');
       const memoNote = m.memo ? `<span class="badge base">${esc(m.memo)}</span>` : '';
 
@@ -804,11 +812,12 @@
     state.draftCharges.forEach((c, i) => {
       const v = chargeStepValue(c);
       const unitNote = c.mile ? `（マイル・${trimPct(v)}円換算）` : (v !== 1 ? ` × ${trimPct(v)}円` : '');
+      const neg = (c.rate || 0) < 0;
       const row = document.createElement('div');
       row.className = 'rule-row';
       row.innerHTML = `
         <span class="rule-tag">${esc(c.label || 'チャージ')}</span>
-        <span class="rule-desc">＋${trimPct(c.rate)}%${unitNote}</span>`;
+        <span class="rule-desc${neg ? ' neg' : ''}">${neg ? '−' : '＋'}${trimPct(Math.abs(c.rate))}%${unitNote}</span>`;
       const delBtn = document.createElement('button');
       delBtn.className = 'rule-del';
       delBtn.textContent = '✕';
@@ -824,6 +833,7 @@
     $('#ceLabel').value = '';
     $('#ceRate').value = '';
     setCeUnit('pt');
+    setCeSign(1);
     updateCeAddState();
     setTimeout(() => $('#ceLabel').focus(), 60);
   }
@@ -835,13 +845,17 @@
     state.ceUnit = unit;
     [...$('#ceUnitSeg').children].forEach((b) => b.classList.toggle('on', b.dataset.unit === unit));
   }
+  function setCeSign(sign) {
+    state.ceSign = sign;
+    [...$('#ceSignSeg').children].forEach((b) => b.classList.toggle('on', Number(b.dataset.sign) === sign));
+  }
   function setFUnit(unit) {
     state.fUnit = unit;
     [...$('#fUnitSeg').children].forEach((b) => b.classList.toggle('on', b.dataset.unit === unit));
   }
   function updateCeAddState() {
-    const rate = parseFloat($('#ceRate').value);
-    $('#ceAddBtn').disabled = isNaN(rate) || rate < 0;
+    const rate = parseFloat(String($('#ceRate').value).replace(/[−ー－]/g, '-'));
+    $('#ceAddBtn').disabled = isNaN(rate) || rate === 0;
   }
 
   function renderDraftRules() {
@@ -1048,9 +1062,13 @@
     const b = e.target.closest('button');
     if (b) setCeUnit(b.dataset.unit);
   });
+  $('#ceSignSeg').addEventListener('click', (e) => { const b = e.target.closest('[data-sign]'); if (b) setCeSign(Number(b.dataset.sign)); });
   $('#ceAddBtn').addEventListener('click', () => {
-    const rate = parseFloat($('#ceRate').value);
-    if (isNaN(rate) || rate < 0) return;
+    let rate = parseFloat(String($('#ceRate').value).replace(/[−ー－]/g, '-'));
+    if (isNaN(rate)) return;
+    // 「−」を選んだときはマイナスで保存（入力欄にマイナスを打っていてもそのまま）
+    rate = Math.abs(rate) * (state.ceSign === -1 || rate < 0 ? -1 : 1);
+    if (rate === 0) return;
     state.draftCharges.push({ label: $('#ceLabel').value.trim(), rate, mile: state.ceUnit === 'mile' });
     renderDraftCharges();
     hideChargeEditor();
