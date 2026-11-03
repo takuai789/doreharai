@@ -294,7 +294,7 @@
   .mk.u { font-size: 13px; color: rgba(60,60,67,.22); }
   .mx-hint { font-size: 12px; color: var(--secondary); margin: 8px 6px 0; line-height: 1.6; }
   /* ATM手数料 */
-  .fee-btn { width: 64px; height: 46px; border: 0; background: none; cursor: pointer; font-family: inherit; position: relative; }
+  .fee-btn { width: 56px; height: 46px; border: 0; background: none; cursor: pointer; font-family: inherit; position: relative; }
   .fee { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
   .fee.free { color: var(--green); }
   .fee.mid { color: #B26B00; }
@@ -302,7 +302,12 @@
   .fee.x { color: #E5484D; font-size: 18px; }
   .fee.u { color: rgba(60,60,67,.22); font-size: 13px; }
   .fee-n { position: absolute; top: 6px; right: 6px; font-size: 10px; color: var(--secondary); }
-  .mx.atm thead th { min-width: 64px; max-width: 70px; }
+  .mx.atm thead th { min-width: 56px; max-width: 60px; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 1px; padding-right: 1px; }
+  .mx.atm .shop-col { width: 78px; min-width: 78px; max-width: 78px; padding: 0 4px 0 10px; }
+  .mx.atm tbody .shop-col { font-size: 13px; line-height: 1.3; white-space: normal; word-break: break-all; padding-top: 4px; padding-bottom: 4px; }
+  .mx.atm tbody .shop-col small { white-space: nowrap; }
+  .fee { font-size: 14px; }
+  .fee-n { top: 5px; right: 3px; }
   .mx td.best { background: rgba(5,150,105,.08); }
   .mx td.best .fee { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
   .fee-kind { font-size: 13px; font-weight: 700; color: var(--secondary); margin: 6px 4px 8px; }
@@ -655,7 +660,7 @@
   }
 
   // ---------- バージョン ----------
-  const APP_VERSION = '1.15.0';
+  const APP_VERSION = '1.16.0';
   function renderVersionLabel() {
     const el = document.getElementById('versionLabel');
     if (el) el.textContent = 'v' + APP_VERSION;
@@ -1425,11 +1430,14 @@
   // ---------- ATM手数料（キャッシュカード × ATM の表） ----------
   // localStorage に { atms: [{ id, name, hidden }], cards: [{ id, name, memo, fees: { atmId: { v: number|'x', note } }, updatedAt }] }
   const ATM_KEY = 'doreharai.atmTable.v1';
-  const DEFAULT_ATMS = ['セブン銀行', 'ローソン銀行', 'イーネット（ファミマ等）', 'ゆうちょ', 'イオン銀行', '自分の銀行'];
+  const DEFAULT_ATMS = ['セブン', 'ローソン', 'ファミマ', 'ゆうちょ', 'イオン', '自行'];
+  // 最初に入っていた長い名前は短い名前に置きかえる（自分で付けた名前はそのまま）
+  const OLD_ATM_NAMES = { 'セブン銀行': 'セブン', 'ローソン銀行': 'ローソン', 'イーネット（ファミマ等）': 'ファミマ', 'イオン銀行': 'イオン', '自分の銀行': '自行' };
   function loadAtmData() {
     let d = null; try { d = JSON.parse(localStorage.getItem(ATM_KEY)); } catch (e) {}
     if (!d || !Array.isArray(d.atms)) d = { atms: DEFAULT_ATMS.map((n, i) => ({ id: 'a' + i, name: n, hidden: false })), cards: [] };
     if (!Array.isArray(d.cards)) d.cards = [];
+    d.atms.forEach((x) => { if (OLD_ATM_NAMES[x.name]) x.name = OLD_ATM_NAMES[x.name]; });
     return d;
   }
   let atmData = loadAtmData();
