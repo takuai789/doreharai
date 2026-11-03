@@ -293,6 +293,25 @@
   .mk.x { color: #E5484D; }
   .mk.u { font-size: 13px; color: rgba(60,60,67,.22); }
   .mx-hint { font-size: 12px; color: var(--secondary); margin: 8px 6px 0; line-height: 1.6; }
+  /* ATM手数料 */
+  .fee-btn { width: 64px; height: 46px; border: 0; background: none; cursor: pointer; font-family: inherit; position: relative; }
+  .fee { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .fee.free { color: var(--green); }
+  .fee.mid { color: #B26B00; }
+  .fee.high { color: #D9483F; }
+  .fee.x { color: #E5484D; font-size: 18px; }
+  .fee.u { color: rgba(60,60,67,.22); font-size: 13px; }
+  .fee-n { position: absolute; top: 6px; right: 6px; font-size: 10px; color: var(--secondary); }
+  .mx.atm thead th { min-width: 64px; max-width: 70px; }
+  .mx td.best { background: rgba(5,150,105,.08); }
+  .mx td.best .fee { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+  .fee-quick { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .fee-quick button { border: 1px solid var(--sep); background: var(--card); border-radius: 999px; padding: 8px 14px; font-family: inherit; font-size: 15px; font-weight: 600; color: var(--ink); cursor: pointer; }
+  .fee-quick button.on { background: var(--green); border-color: var(--green); color: #fff; }
+  .fee-quick button[data-fq="x"].on { background: #E5484D; border-color: #E5484D; }
+  .fee-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .fee-row .sh-field { margin: 0; text-align: right; font-size: 20px; font-weight: 700; }
+  .fee-row span { font-size: 16px; color: var(--secondary); }
   /* シート */
   .sh-bg { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 50; opacity: 0; pointer-events: none; transition: opacity .25s; }
   .sh-bg.show { opacity: 1; pointer-events: auto; }
@@ -387,6 +406,22 @@
       <div class="mx-filter" id="mxFilter" style="display:none"></div>
       <div id="mxArea"></div>
       <div class="mx-hint">マスを押すと「？（未確認）→ ○ → ×」の順に切り替わります。決済の名前を押すと、それが使えるお店だけに絞れます。お店の名前を押すと、まとめて入力・メモ・削除ができます。</div>
+    </div>
+  </div>
+
+  <!-- ===== ATM手数料 ===== -->
+  <div id="atmView" class="view">
+    <div class="navbar">
+      <button class="text-btn" id="atmListBtn">ATM</button>
+      <span class="title">ATM手数料</span>
+      <button class="icon-btn" id="addAtmCardBtn" aria-label="キャッシュカードを追加">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+    <div class="scroll">
+      <div class="mx-filter" id="atmFilter" style="display:none"></div>
+      <div id="atmArea"></div>
+      <div class="mx-hint">マスを押すと手数料（1回あたり）を入れられます。条件があるときはメモに（例：月3回まで無料、夜間は＋110円）。メモのあるマスには※が付きます。カードごとに一番安いATMに下線が付き、ATMの名前を押すとそのATMで安い順に並びます。</div>
     </div>
   </div>
 
@@ -533,6 +568,7 @@
   <nav class="tabbar" id="tabbar">
     <button data-tab="compareView" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><line x1="2" y1="10" x2="22" y2="10"/></svg>どれで払う</button>
     <button data-tab="shopsView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v11h16V9"/><path d="M3 9h18M9 20v-6h6v6"/></svg>お店の対応表</button>
+    <button data-tab="atmView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><rect x="7" y="6" width="10" height="5" rx="1"/><path d="M8 15h8M10 18h4"/></svg>ATM手数料</button>
   </nav>
 </div>
 
@@ -544,6 +580,26 @@
   <input class="sh-field" id="shopMemo" style="margin-top:12px" placeholder="メモ（任意）例：セルフレジはPayPay不可" autocomplete="off" autocorrect="off" spellcheck="false" />
   <button class="sh-btn" id="shopSave">保存</button>
   <button class="sh-del" id="shopDel" style="display:none;">このお店を削除</button>
+</div>
+<div class="sh" id="feeSheet">
+  <div class="sh-head"><h2 id="feeTitle">手数料</h2><button class="sh-x" id="feeSheetX">✕</button></div>
+  <div class="fee-quick" id="feeQuick"><button data-fq="0">0円</button><button data-fq="110">110円</button><button data-fq="220">220円</button><button data-fq="x">× 使えない</button><button data-fq="">？ 未確認</button></div>
+  <div class="fee-row"><input class="sh-field" id="feeNum" type="tel" inputmode="numeric" placeholder="ほかの金額" autocomplete="off" /><span>円</span></div>
+  <input class="sh-field" id="feeNote" placeholder="条件メモ（任意）例：月3回まで無料" autocomplete="off" autocorrect="off" spellcheck="false" />
+  <button class="sh-btn" id="feeSave">保存</button>
+</div>
+<div class="sh" id="atmCardSheet">
+  <div class="sh-head"><h2 id="acTitle">キャッシュカード</h2><button class="sh-x" id="acSheetX">✕</button></div>
+  <input class="sh-field" id="acName" placeholder="例：住信SBIネット銀行" autocomplete="off" autocorrect="off" spellcheck="false" />
+  <input class="sh-field" id="acMemo" placeholder="メモ（任意）例：スマプロランク2で月5回無料" autocomplete="off" autocorrect="off" spellcheck="false" />
+  <button class="sh-btn" id="acSave">保存</button>
+  <button class="sh-del" id="acDel" style="display:none;">このカードを削除</button>
+</div>
+<div class="sh" id="atmListSheet">
+  <div class="sh-head"><h2>ATM</h2><button class="sh-x" id="atmListX">✕</button></div>
+  <div class="card" id="atmList"></div>
+  <div class="svc-add"><input class="sh-field" id="atmNew" placeholder="追加するATM（例：みずほ銀行）" autocomplete="off" autocorrect="off" spellcheck="false" /><button id="atmAddBtn">追加</button></div>
+  <div class="mx-hint">表に出す順番を変えたり、使わないATMを隠したりできます。</div>
 </div>
 <div class="sh" id="svcSheet">
   <div class="sh-head"><h2>決済サービス</h2><button class="sh-x" id="svcSheetX">✕</button></div>
@@ -588,7 +644,7 @@
   }
 
   // ---------- バージョン ----------
-  const APP_VERSION = '1.13.0';
+  const APP_VERSION = '1.14.0';
   function renderVersionLabel() {
     const el = document.getElementById('versionLabel');
     if (el) el.textContent = 'v' + APP_VERSION;
@@ -1023,7 +1079,8 @@
     document.body.classList.toggle('subview', id === 'methodsView' || id === 'editView');
     document.querySelectorAll('#tabbar [data-tab]').forEach((b) => b.classList.toggle('on', b.dataset.tab === id));
     if (id === 'shopsView') renderShops();
-    if (id === 'compareView' || id === 'shopsView') { try { localStorage.setItem(TAB_KEY, id); } catch (e) {} }
+    if (id === 'atmView') renderAtm();
+    if (id === 'compareView' || id === 'shopsView' || id === 'atmView') { try { localStorage.setItem(TAB_KEY, id); } catch (e) {} }
     if (id === 'compareView') { renderCompare(); renderMonthMemo(); }
     if (id === 'methodsView') renderMethods();
   }
@@ -1107,6 +1164,7 @@
       methods: state.methods,
       settings: { mileValue: localStorage.getItem(MILE_KEY), monthMemo: loadMonthMemo() },
       shopTable: shopData,
+      atmTable: atmData,
     };
     if (await bkSave('どれ払い', JSON.stringify(data, null, 2)) === 'ok') window.bkNudgeMark && bkNudgeMark();
   }
@@ -1127,6 +1185,7 @@
         }
       }
       if (data.shopTable && Array.isArray(data.shopTable.shops)) mergeShopTable(data.shopTable);
+      if (data.atmTable && Array.isArray(data.atmTable.cards)) mergeAtmTable(data.atmTable);
       await loadAll();
       renderMethods();
       uiToast('取り込みました');
@@ -1352,6 +1411,134 @@
     (inc.shops || []).forEach((s) => { const l = byId.get(s.id); if (!l || (s.updatedAt || 0) > (l.updatedAt || 0)) byId.set(s.id, s); });
     shopData.shops = [...byId.values()]; saveShopData();
   }
+  // ---------- ATM手数料（キャッシュカード × ATM の表） ----------
+  // localStorage に { atms: [{ id, name, hidden }], cards: [{ id, name, memo, fees: { atmId: { v: number|'x', note } }, updatedAt }] }
+  const ATM_KEY = 'doreharai.atmTable.v1';
+  const DEFAULT_ATMS = ['セブン銀行', 'ローソン銀行', 'イーネット（ファミマ等）', 'ゆうちょ', 'イオン銀行', '自分の銀行'];
+  function loadAtmData() {
+    let d = null; try { d = JSON.parse(localStorage.getItem(ATM_KEY)); } catch (e) {}
+    if (!d || !Array.isArray(d.atms)) d = { atms: DEFAULT_ATMS.map((n, i) => ({ id: 'a' + i, name: n, hidden: false })), cards: [] };
+    if (!Array.isArray(d.cards)) d.cards = [];
+    return d;
+  }
+  let atmData = loadAtmData();
+  const saveAtmData = () => { try { localStorage.setItem(ATM_KEY, JSON.stringify(atmData)); } catch (e) {} };
+  let atmSortCol = null, atmCardEdit = null, atmCellEdit = null;
+  const visibleAtms = () => atmData.atms.filter((a) => !a.hidden);
+  const feeRank = (f) => !f || f.v === undefined || f.v === '' ? 1e9 : f.v === 'x' ? 1e8 : Number(f.v);
+  function feeCell(f) {
+    if (!f || f.v === undefined || f.v === '') return '<span class="fee u">？</span>';
+    if (f.v === 'x') return '<span class="fee x">×</span>';
+    const n = Number(f.v);
+    return '<span class="fee ' + (n === 0 ? 'free' : n <= 110 ? 'mid' : 'high') + '">' + (n === 0 ? '0円' : n.toLocaleString()) + '</span>' + (f.note ? '<span class="fee-n">※</span>' : '');
+  }
+  function renderAtm() {
+    const atms = visibleAtms();
+    let cards = atmData.cards.slice();
+    if (atmSortCol && atms.some((a) => a.id === atmSortCol)) cards.sort((a, b) => feeRank(a.fees[atmSortCol]) - feeRank(b.fees[atmSortCol]) || a.name.localeCompare(b.name, 'ja'));
+    else { atmSortCol = null; }
+    const f = $('#atmFilter');
+    if (atmSortCol) { const at = atmData.atms.find((a) => a.id === atmSortCol); f.style.display = ''; f.innerHTML = '<span>' + escH(at.name) + 'で安い順</span><button id="atmSortOff">解除</button>'; }
+    else f.style.display = 'none';
+    if (!atmData.cards.length) { $('#atmArea').innerHTML = '<div class="empty">右上の「＋」でキャッシュカードを追加すると、ATMごとの手数料の表ができます。</div>'; return; }
+    // 各カードの最安を強調
+    let h = '<div class="mx-wrap"><table class="mx atm"><thead><tr><th class="shop-col">カード</th>' +
+      atms.map((a) => '<th data-acol="' + a.id + '" class="' + (atmSortCol === a.id ? 'on' : '') + '"><span class="vt">' + escH(a.name) + '</span></th>').join('') + '</tr></thead><tbody>';
+    for (const c of cards) {
+      const ranks = atms.map((a) => feeRank(c.fees[a.id])); const best = Math.min(...ranks);
+      h += '<tr><th class="shop-col" data-acard="' + c.id + '">' + escH(c.name) + (c.memo ? '<small>' + escH(c.memo) + '</small>' : '') + '</th>' +
+        atms.map((a, i) => '<td class="' + (atmSortCol === a.id ? 'on' : '') + (ranks[i] === best && best < 1e8 ? ' best' : '') + '"><button class="fee-btn" data-acell="' + c.id + '|' + a.id + '">' + feeCell(c.fees[a.id]) + '</button></td>').join('') + '</tr>';
+    }
+    $('#atmArea').innerHTML = h + '</tbody></table></div>';
+  }
+  $('#atmFilter').addEventListener('click', (e) => { if (e.target.id === 'atmSortOff') { atmSortCol = null; renderAtm(); } });
+  $('#atmArea').addEventListener('click', (e) => {
+    const cell = e.target.closest('[data-acell]'); if (cell) { const [cid, aid] = cell.dataset.acell.split('|'); return openFeeSheet(cid, aid); }
+    const col = e.target.closest('[data-acol]'); if (col) { atmSortCol = atmSortCol === col.dataset.acol ? null : col.dataset.acol; renderAtm(); return; }
+    const card = e.target.closest('[data-acard]'); if (card) openAtmCardSheet(card.dataset.acard);
+  });
+  // マス（手数料）の入力
+  let feeDraft = '';
+  function setFeeDraft(v) {
+    feeDraft = v;
+    document.querySelectorAll('#feeQuick [data-fq]').forEach((b) => b.classList.toggle('on', b.dataset.fq === String(v)));
+    if (v !== 'x' && v !== '' && !['0', '110', '220'].includes(String(v))) $('#feeNum').value = v; else if (v === 'x' || v === '') $('#feeNum').value = '';
+  }
+  function openFeeSheet(cid, aid) {
+    const c = atmData.cards.find((x) => x.id === cid), a = atmData.atms.find((x) => x.id === aid); if (!c || !a) return;
+    atmCellEdit = { cid, aid };
+    const f = c.fees[aid] || {};
+    $('#feeTitle').textContent = c.name + ' × ' + a.name;
+    $('#feeNum').value = f.v !== undefined && f.v !== 'x' && f.v !== '' ? f.v : '';
+    setFeeDraft(f.v === undefined ? '' : String(f.v));
+    $('#feeNote').value = f.note || '';
+    openSh('#feeSheet');
+  }
+  $('#feeQuick').addEventListener('click', (e) => { const b = e.target.closest('[data-fq]'); if (!b) return; setFeeDraft(b.dataset.fq); if (b.dataset.fq !== 'x' && b.dataset.fq !== '') $('#feeNum').value = b.dataset.fq; });
+  $('#feeNum').addEventListener('input', () => { const v = $('#feeNum').value.replace(/[^0-9]/g, ''); feeDraft = v; document.querySelectorAll('#feeQuick [data-fq]').forEach((b) => b.classList.toggle('on', b.dataset.fq === v)); });
+  $('#feeSave').addEventListener('click', () => {
+    if (!atmCellEdit) return; const c = atmData.cards.find((x) => x.id === atmCellEdit.cid); if (!c) return;
+    const note = $('#feeNote').value.trim();
+    if (feeDraft === '' && !note) delete c.fees[atmCellEdit.aid];
+    else c.fees[atmCellEdit.aid] = { v: feeDraft === 'x' ? 'x' : feeDraft === '' ? '' : Number(feeDraft), note };
+    c.updatedAt = Date.now(); saveAtmData(); closeSh(); renderAtm();
+  });
+  $('#feeSheetX').addEventListener('click', closeSh);
+  // カード（行）の追加・編集
+  function openAtmCardSheet(id) {
+    const c = id ? atmData.cards.find((x) => x.id === id) : null;
+    atmCardEdit = c ? c.id : null;
+    $('#acTitle').textContent = c ? 'キャッシュカードを編集' : 'キャッシュカードを追加';
+    $('#acName').value = c ? c.name : ''; $('#acMemo').value = c ? c.memo || '' : '';
+    $('#acDel').style.display = c ? '' : 'none';
+    openSh('#atmCardSheet');
+    if (!c) setTimeout(() => $('#acName').focus(), 320);
+  }
+  $('#addAtmCardBtn').addEventListener('click', () => openAtmCardSheet(null));
+  $('#acSheetX').addEventListener('click', closeSh);
+  $('#acSave').addEventListener('click', () => {
+    const name = $('#acName').value.trim(); if (!name) { $('#acName').focus(); return; }
+    const v = { name, memo: $('#acMemo').value.trim(), updatedAt: Date.now() };
+    if (atmCardEdit) Object.assign(atmData.cards.find((x) => x.id === atmCardEdit), v);
+    else atmData.cards.push(Object.assign({ id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), fees: {} }, v));
+    saveAtmData(); closeSh(); renderAtm();
+  });
+  $('#acDel').addEventListener('click', async () => {
+    if (!atmCardEdit) return;
+    if (!(await uiAsk('このキャッシュカードを表から削除しますか？', '削除する'))) return;
+    atmData.cards = atmData.cards.filter((x) => x.id !== atmCardEdit); saveAtmData(); closeSh(); renderAtm();
+  });
+  // ATM（列）の管理
+  function renderAtmList() {
+    const L = atmData.atms;
+    $('#atmList').innerHTML = L.map((s, i) => '<div class="svc-row' + (s.hidden ? ' off' : '') + '"><span class="svc-name">' + escH(s.name) + '</span>' +
+      '<button data-at="up|' + s.id + '"' + (i === 0 ? ' disabled' : '') + '>↑</button><button data-at="down|' + s.id + '"' + (i === L.length - 1 ? ' disabled' : '') + '>↓</button>' +
+      '<button data-at="hide|' + s.id + '">' + (s.hidden ? '表示' : '隠す') + '</button><button class="del" data-at="del|' + s.id + '">✕</button></div>').join('');
+  }
+  $('#atmListBtn').addEventListener('click', () => { renderAtmList(); openSh('#atmListSheet'); });
+  $('#atmListX').addEventListener('click', () => { closeSh(); renderAtm(); });
+  $('#atmList').addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-at]'); if (!b) return;
+    const [act, id] = b.dataset.at.split('|'); const L = atmData.atms, i = L.findIndex((s) => s.id === id); if (i < 0) return;
+    if (act === 'up' && i > 0) [L[i - 1], L[i]] = [L[i], L[i - 1]];
+    if (act === 'down' && i < L.length - 1) [L[i + 1], L[i]] = [L[i], L[i + 1]];
+    if (act === 'hide') L[i].hidden = !L[i].hidden;
+    if (act === 'del') {
+      if (!(await uiAsk('「' + L[i].name + '」を表から消しますか？\nこのATMの手数料の記録も消えます。', '消す'))) return;
+      L.splice(i, 1); atmData.cards.forEach((c) => { delete c.fees[id]; });
+    }
+    saveAtmData(); renderAtmList();
+  });
+  function addAtm() { const n = $('#atmNew').value.trim(); if (!n) return; atmData.atms.push({ id: 'a' + Date.now().toString(36), name: n, hidden: false }); $('#atmNew').value = ''; saveAtmData(); renderAtmList(); }
+  $('#atmAddBtn').addEventListener('click', addAtm);
+  $('#atmNew').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); addAtm(); } });
+  function mergeAtmTable(inc) {
+    const have = new Set(atmData.atms.map((s) => s.id));
+    (inc.atms || []).forEach((s) => { if (!have.has(s.id)) atmData.atms.push(s); });
+    const byId = new Map(atmData.cards.map((s) => [s.id, s]));
+    (inc.cards || []).forEach((s) => { const l = byId.get(s.id); if (!l || (s.updatedAt || 0) > (l.updatedAt || 0)) byId.set(s.id, s); });
+    atmData.cards = [...byId.values()]; saveAtmData();
+  }
   // 下のタブ
   $('#tabbar').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) showView(b.dataset.tab); });
 
@@ -1364,7 +1551,7 @@
     renderMonthMemo();
     renderVersionLabel();
     let lastTab = 'compareView'; try { lastTab = localStorage.getItem(TAB_KEY) || 'compareView'; } catch (e) {}
-    if (lastTab === 'shopsView') showView('shopsView');
+    if (lastTab === 'shopsView' || lastTab === 'atmView') showView(lastTab);
   })();
 
   // ---------- visualViewport（キーボード対策） ----------
