@@ -261,6 +261,70 @@
   }
   .version { text-align: center; padding: 14px 0 4px; font-size: 12px; color: var(--tertiary); }
 
+  /* ---- 下のタブ ---- */
+  .tabbar { flex: none; display: flex; justify-content: space-around; background: rgba(249,249,249,.94); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); border-top: .5px solid var(--sep); padding: 6px 0 calc(var(--safe-bottom) + 2px); }
+  .tabbar button { flex: 1; border: 0; background: none; display: flex; flex-direction: column; align-items: center; gap: 2px; font-family: inherit; font-size: 10.5px; font-weight: 600; color: rgba(60,60,67,.5); cursor: pointer; padding: 2px 0; }
+  .tabbar button svg { width: 25px; height: 25px; }
+  .tabbar button.on { color: var(--green); }
+  body.subview .tabbar { display: none; }
+  body.keyboard-open .tabbar { display: none; }
+  .scroll { padding-bottom: 24px; }
+  body.subview .scroll { padding-bottom: calc(var(--safe-bottom) + 24px); }
+  /* ---- お店の対応表 ---- */
+  .shop-search { display: flex; align-items: center; gap: 8px; background: rgba(118,118,128,.12); border-radius: 10px; padding: 8px 10px; margin-bottom: 10px; }
+  .shop-search input { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font-family: inherit; font-size: 16px; color: var(--ink); }
+  .mx-filter { font-size: 13px; color: var(--green); font-weight: 600; margin: 0 4px 8px; display: flex; align-items: center; gap: 8px; }
+  .mx-filter button { border: 0; background: rgba(5,150,105,.12); color: var(--green); border-radius: 999px; padding: 3px 10px; font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .mx-wrap { background: var(--card); border-radius: 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .mx { border-collapse: separate; border-spacing: 0; min-width: 100%; }
+  .mx th, .mx td { border-bottom: .5px solid var(--sep); }
+  .mx tr:last-child th, .mx tr:last-child td { border-bottom: 0; }
+  .mx thead th { font-size: 10.5px; font-weight: 600; color: var(--secondary); padding: 8px 2px 6px; vertical-align: bottom; background: var(--card); cursor: pointer; min-width: 50px; max-width: 54px; line-height: 1.25; word-break: break-all; }
+  .mx thead th .vt { display: block; }
+  .mx thead th.on { color: var(--green); background: var(--green-soft); }
+  .mx .shop-col { position: sticky; left: 0; z-index: 2; background: var(--card); text-align: left; min-width: 112px; max-width: 132px; padding: 0 8px 0 12px; border-right: .5px solid var(--sep); }
+  .mx thead .shop-col { font-size: 12px; vertical-align: bottom; padding-bottom: 8px; cursor: default; }
+  .mx tbody .shop-col { font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mx tbody .shop-col small { display: block; font-size: 10.5px; font-weight: 500; color: var(--tertiary); overflow: hidden; text-overflow: ellipsis; }
+  .mx td { padding: 0; text-align: center; }
+  .mx td.on { background: rgba(5,150,105,.06); }
+  .mk { width: 50px; height: 44px; border: 0; background: none; font-family: inherit; font-size: 19px; font-weight: 700; cursor: pointer; color: var(--tertiary); }
+  .mk.o { color: var(--green); }
+  .mk.x { color: #E5484D; }
+  .mk.u { font-size: 13px; color: rgba(60,60,67,.22); }
+  .mx-hint { font-size: 12px; color: var(--secondary); margin: 8px 6px 0; line-height: 1.6; }
+  /* シート */
+  .sh-bg { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 50; opacity: 0; pointer-events: none; transition: opacity .25s; }
+  .sh-bg.show { opacity: 1; pointer-events: auto; }
+  .sh { position: fixed; left: 0; right: 0; bottom: var(--kb, 0px); z-index: 51; background: var(--bg); border-radius: 16px 16px 0 0; padding: 10px 16px calc(var(--safe-bottom) + 16px); transform: translateY(105%); transition: transform .3s cubic-bezier(.32,.72,0,1); max-height: calc(var(--app-height, 100vh) - var(--safe-top) - 16px); overflow-y: auto; max-width: 560px; margin: 0 auto; }
+  .sh.show { transform: translateY(0); }
+  .sh::before { content: ""; display: block; width: 36px; height: 5px; border-radius: 3px; background: var(--tertiary); margin: 0 auto 10px; }
+  .sh-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .sh-head h2 { font-size: 17px; font-weight: 600; }
+  .sh-x { width: 30px; height: 30px; border-radius: 50%; border: 0; background: rgba(118,118,128,.14); color: var(--secondary); font-size: 14px; cursor: pointer; }
+  .sh-field { width: 100%; border: 0; border-radius: 12px; background: var(--card); padding: 12px 14px; font-family: inherit; font-size: 16px; color: var(--ink); outline: none; margin-bottom: 12px; }
+  .ox-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 10px 7px 14px; background: var(--card); border-bottom: .5px solid var(--sep); }
+  .ox-row:last-child { border-bottom: 0; }
+  .ox-row .ox-name { font-size: 15px; font-weight: 500; }
+  .ox-seg { display: flex; background: rgba(118,118,128,.12); border-radius: 9px; padding: 2px; }
+  .ox-seg button { width: 44px; height: 32px; border: 0; background: none; border-radius: 7px; font-family: inherit; font-size: 16px; font-weight: 700; color: var(--secondary); cursor: pointer; }
+  .ox-seg button.u { font-size: 12px; }
+  .ox-seg button.on.o { background: var(--green); color: #fff; }
+  .ox-seg button.on.x { background: #E5484D; color: #fff; }
+  .ox-seg button.on.u { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+  .sh-btn { width: 100%; padding: 13px; border: 0; border-radius: 13px; background: var(--green); color: #fff; font-family: inherit; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 14px; }
+  .sh-del { width: 100%; padding: 13px; border: 0; border-radius: 13px; background: var(--card); color: var(--red); font-family: inherit; font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 10px; }
+  .svc-row { display: flex; align-items: center; gap: 6px; padding: 8px 10px 8px 14px; background: var(--card); border-bottom: .5px solid var(--sep); }
+  .svc-row:last-child { border-bottom: 0; }
+  .svc-row .svc-name { flex: 1; font-size: 15px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .svc-row.off .svc-name { color: var(--tertiary); }
+  .svc-row button { border: 0; background: rgba(60,60,67,.08); color: var(--blue); border-radius: 8px; height: 30px; min-width: 32px; padding: 0 8px; font-family: inherit; font-size: 13px; cursor: pointer; }
+  .svc-row button:disabled { color: var(--tertiary); background: rgba(60,60,67,.04); }
+  .svc-row button.del { color: var(--red); }
+  .svc-add { display: flex; gap: 8px; margin-top: 12px; }
+  .svc-add input { flex: 1; margin: 0; }
+  .svc-add button { flex: none; border: 0; border-radius: 12px; background: var(--green); color: #fff; font-family: inherit; font-size: 15px; font-weight: 600; padding: 0 16px; cursor: pointer; }
+
   /* 更新バナー */
   #updateBanner {
     position: fixed; left: 12px; right: 12px;
@@ -306,6 +370,23 @@
 
       <div class="section-label">おすすめ順</div>
       <div id="rankList"></div>
+    </div>
+  </div>
+
+  <!-- ===== お店の対応表 ===== -->
+  <div id="shopsView" class="view">
+    <div class="navbar">
+      <button class="text-btn" id="svcBtn">決済</button>
+      <span class="title">お店の対応表</span>
+      <button class="icon-btn" id="addShopBtn" aria-label="お店を追加">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+    <div class="scroll">
+      <div class="shop-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(60,60,67,.5)" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="shopQ" type="search" placeholder="お店をさがす" autocomplete="off" autocorrect="off" spellcheck="false" /></div>
+      <div class="mx-filter" id="mxFilter" style="display:none"></div>
+      <div id="mxArea"></div>
+      <div class="mx-hint">マスを押すと「？（未確認）→ ○ → ×」の順に切り替わります。決済の名前を押すと、それが使えるお店だけに絞れます。お店の名前を押すと、まとめて入力・メモ・削除ができます。</div>
     </div>
   </div>
 
@@ -449,6 +530,26 @@
     </div>
   </div>
 
+  <nav class="tabbar" id="tabbar">
+    <button data-tab="compareView" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><line x1="2" y1="10" x2="22" y2="10"/></svg>どれで払う</button>
+    <button data-tab="shopsView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v11h16V9"/><path d="M3 9h18M9 20v-6h6v6"/></svg>お店の対応表</button>
+  </nav>
+</div>
+
+<div class="sh-bg" id="shBg"></div>
+<div class="sh" id="shopSheet">
+  <div class="sh-head"><h2 id="shopSheetTitle">お店</h2><button class="sh-x" id="shopSheetX">✕</button></div>
+  <input class="sh-field" id="shopName" placeholder="お店の名前（例：近所のスーパー〇〇）" autocomplete="off" autocorrect="off" spellcheck="false" />
+  <div class="card" id="oxList"></div>
+  <input class="sh-field" id="shopMemo" style="margin-top:12px" placeholder="メモ（任意）例：セルフレジはPayPay不可" autocomplete="off" autocorrect="off" spellcheck="false" />
+  <button class="sh-btn" id="shopSave">保存</button>
+  <button class="sh-del" id="shopDel" style="display:none;">このお店を削除</button>
+</div>
+<div class="sh" id="svcSheet">
+  <div class="sh-head"><h2>決済サービス</h2><button class="sh-x" id="svcSheetX">✕</button></div>
+  <div class="card" id="svcList"></div>
+  <div class="svc-add"><input class="sh-field" id="svcNew" placeholder="追加する決済（例：WAON）" autocomplete="off" autocorrect="off" spellcheck="false" /><button id="svcAddBtn">追加</button></div>
+  <div class="mx-hint">表に出す順番を変えたり、使わないものを隠したりできます。隠しても○×の記録は残ります。</div>
 </div>
 
 <script>
@@ -487,7 +588,7 @@
   }
 
   // ---------- バージョン ----------
-  const APP_VERSION = '1.11.0';
+  const APP_VERSION = '1.13.0';
   function renderVersionLabel() {
     const el = document.getElementById('versionLabel');
     if (el) el.textContent = 'v' + APP_VERSION;
@@ -919,6 +1020,10 @@
   // ---------- View切替 ----------
   function showView(id) {
     document.querySelectorAll('.view').forEach((v) => v.classList.toggle('active', v.id === id));
+    document.body.classList.toggle('subview', id === 'methodsView' || id === 'editView');
+    document.querySelectorAll('#tabbar [data-tab]').forEach((b) => b.classList.toggle('on', b.dataset.tab === id));
+    if (id === 'shopsView') renderShops();
+    if (id === 'compareView' || id === 'shopsView') { try { localStorage.setItem(TAB_KEY, id); } catch (e) {} }
     if (id === 'compareView') { renderCompare(); renderMonthMemo(); }
     if (id === 'methodsView') renderMethods();
   }
@@ -1001,6 +1106,7 @@
       exportedAt: new Date().toISOString(),
       methods: state.methods,
       settings: { mileValue: localStorage.getItem(MILE_KEY), monthMemo: loadMonthMemo() },
+      shopTable: shopData,
     };
     if (await bkSave('どれ払い', JSON.stringify(data, null, 2)) === 'ok') window.bkNudgeMark && bkNudgeMark();
   }
@@ -1020,6 +1126,7 @@
           localStorage.setItem(MEMO_KEY, JSON.stringify(im));
         }
       }
+      if (data.shopTable && Array.isArray(data.shopTable.shops)) mergeShopTable(data.shopTable);
       await loadAll();
       renderMethods();
       uiToast('取り込みました');
@@ -1111,6 +1218,143 @@
     e.target.value = '';
   });
 
+  // ---------- お店の対応表（○×） ----------
+  // localStorage に { services: [{ id, name, hidden }], shops: [{ id, name, memo, marks: { svcId: 'o'|'x' }, updatedAt }] }
+  const SHOP_KEY = 'doreharai.shopTable.v1', TAB_KEY = 'doreharai.tab';
+  const DEFAULT_SVCS = ['クレカ', 'タッチ決済', 'iD', 'QUICPay', '交通系IC', 'PayPay', '楽天ペイ', 'd払い', 'au PAY', 'メルペイ', '楽天Edy', 'WAON', 'nanaco'];
+  function loadShopData() {
+    let d = null; try { d = JSON.parse(localStorage.getItem(SHOP_KEY)); } catch (e) {}
+    if (!d || !Array.isArray(d.services)) d = { services: DEFAULT_SVCS.map((n, i) => ({ id: 's' + i, name: n, hidden: i >= 10 })), shops: [] };
+    if (!Array.isArray(d.shops)) d.shops = [];
+    return d;
+  }
+  let shopData = loadShopData();
+  const saveShopData = () => { try { localStorage.setItem(SHOP_KEY, JSON.stringify(shopData)); } catch (e) {} };
+  let shopFilter = null, shopEditId = null, shopDraft = {};
+  const visibleSvcs = () => shopData.services.filter((s) => !s.hidden);
+  const escH = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const MK = { o: '○', x: '×', '': '？' };
+  function renderShops() {
+    const svcs = visibleSvcs();
+    const q = ($('#shopQ').value || '').trim().toLowerCase();
+    let shops = shopData.shops.slice().sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+    if (q) shops = shops.filter((s) => (s.name + ' ' + (s.memo || '')).toLowerCase().includes(q));
+    if (shopFilter && !svcs.some((s) => s.id === shopFilter)) shopFilter = null;
+    if (shopFilter) shops = shops.filter((s) => s.marks[shopFilter] === 'o');
+    const f = $('#mxFilter');
+    if (shopFilter) { const sv = shopData.services.find((s) => s.id === shopFilter); f.style.display = ''; f.innerHTML = '<span>' + escH(sv.name) + ' が使えるお店 ' + shops.length + '件</span><button id="mxFilterOff">解除</button>'; }
+    else f.style.display = 'none';
+    if (!shopData.shops.length) { $('#mxArea').innerHTML = '<div class="empty">右上の「＋」でお店を追加すると、ここに○×の表ができます。</div>'; return; }
+    if (!shops.length) { $('#mxArea').innerHTML = '<div class="empty" style="padding:28px 12px">当てはまるお店がありません。</div>'; return; }
+    let h = '<div class="mx-wrap"><table class="mx"><thead><tr><th class="shop-col">お店</th>' +
+      svcs.map((s) => '<th data-col="' + s.id + '" class="' + (shopFilter === s.id ? 'on' : '') + '"><span class="vt">' + escH(s.name) + '</span></th>').join('') + '</tr></thead><tbody>';
+    for (const sh of shops) {
+      h += '<tr><th class="shop-col" data-shop="' + sh.id + '">' + escH(sh.name) + (sh.memo ? '<small>' + escH(sh.memo) + '</small>' : '') + '</th>' +
+        svcs.map((s) => { const m = sh.marks[s.id] || ''; return '<td class="' + (shopFilter === s.id ? 'on' : '') + '"><button class="mk ' + (m || 'u') + '" data-mk="' + sh.id + '|' + s.id + '">' + MK[m] + '</button></td>'; }).join('') + '</tr>';
+    }
+    $('#mxArea').innerHTML = h + '</tbody></table></div>';
+  }
+  $('#shopQ').addEventListener('input', renderShops);
+  $('#mxFilter').addEventListener('click', (e) => { if (e.target.id === 'mxFilterOff') { shopFilter = null; renderShops(); } });
+  $('#mxArea').addEventListener('click', (e) => {
+    const mk = e.target.closest('[data-mk]');
+    if (mk) {
+      const [shId, svId] = mk.dataset.mk.split('|');
+      const sh = shopData.shops.find((s) => s.id === shId); if (!sh) return;
+      const cur = sh.marks[svId] || '', next = cur === '' ? 'o' : cur === 'o' ? 'x' : '';
+      if (next) sh.marks[svId] = next; else delete sh.marks[svId];
+      sh.updatedAt = Date.now(); saveShopData();
+      mk.className = 'mk ' + (next || 'u'); mk.textContent = MK[next];
+      return;
+    }
+    const col = e.target.closest('[data-col]');
+    if (col) { shopFilter = shopFilter === col.dataset.col ? null : col.dataset.col; renderShops(); return; }
+    const shp = e.target.closest('[data-shop]');
+    if (shp) openShopSheet(shp.dataset.shop);
+  });
+  // シート共通
+  function openSh(id) { $('#shBg').classList.add('show'); $(id).classList.add('show'); }
+  function closeSh() { document.querySelectorAll('.sh.show').forEach((s) => s.classList.remove('show')); $('#shBg').classList.remove('show'); if (document.activeElement) document.activeElement.blur(); }
+  $('#shBg').addEventListener('click', closeSh);
+  $('#shopSheetX').addEventListener('click', closeSh);
+  $('#svcSheetX').addEventListener('click', () => { closeSh(); renderShops(); });
+  // お店シート（まとめて○×・メモ・削除）
+  function renderOx() {
+    $('#oxList').innerHTML = visibleSvcs().map((s) => {
+      const m = shopDraft[s.id] || '';
+      return '<div class="ox-row"><span class="ox-name">' + escH(s.name) + '</span><div class="ox-seg">' +
+        [['o', '○'], ['x', '×'], ['', '？']].map(([v, l]) => '<button class="' + (v || 'u') + (m === v ? ' on' : '') + '" data-ox="' + s.id + '|' + v + '">' + l + '</button>').join('') + '</div></div>';
+    }).join('');
+  }
+  $('#oxList').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-ox]'); if (!b) return;
+    const [sid, v] = b.dataset.ox.split('|');
+    if (v) shopDraft[sid] = v; else delete shopDraft[sid];
+    renderOx();
+  });
+  function openShopSheet(id) {
+    const sh = id ? shopData.shops.find((s) => s.id === id) : null;
+    shopEditId = sh ? sh.id : null;
+    shopDraft = sh ? Object.assign({}, sh.marks) : {};
+    $('#shopSheetTitle').textContent = sh ? 'お店を編集' : 'お店を追加';
+    $('#shopName').value = sh ? sh.name : '';
+    $('#shopMemo').value = sh ? sh.memo || '' : '';
+    $('#shopDel').style.display = sh ? '' : 'none';
+    renderOx(); openSh('#shopSheet');
+    if (!sh) setTimeout(() => $('#shopName').focus(), 320);
+  }
+  $('#addShopBtn').addEventListener('click', () => openShopSheet(null));
+  $('#shopSave').addEventListener('click', () => {
+    const name = $('#shopName').value.trim(); if (!name) { $('#shopName').focus(); return; }
+    const v = { name, memo: $('#shopMemo').value.trim(), marks: shopDraft, updatedAt: Date.now() };
+    if (shopEditId) { const sh = shopData.shops.find((s) => s.id === shopEditId); Object.assign(sh, v); }
+    else shopData.shops.push(Object.assign({ id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5) }, v));
+    saveShopData(); closeSh(); renderShops();
+  });
+  $('#shopDel').addEventListener('click', async () => {
+    if (!shopEditId) return;
+    if (!(await uiAsk('このお店を削除しますか？', '削除する'))) return;
+    shopData.shops = shopData.shops.filter((s) => s.id !== shopEditId);
+    saveShopData(); closeSh(); renderShops();
+  });
+  // 決済サービスの管理（並べ替え・隠す・追加・削除）
+  function renderSvcs() {
+    const L = shopData.services;
+    $('#svcList').innerHTML = L.map((s, i) => '<div class="svc-row' + (s.hidden ? ' off' : '') + '"><span class="svc-name">' + escH(s.name) + '</span>' +
+      '<button data-sv="up|' + s.id + '"' + (i === 0 ? ' disabled' : '') + '>↑</button><button data-sv="down|' + s.id + '"' + (i === L.length - 1 ? ' disabled' : '') + '>↓</button>' +
+      '<button data-sv="hide|' + s.id + '">' + (s.hidden ? '表示' : '隠す') + '</button><button class="del" data-sv="del|' + s.id + '">✕</button></div>').join('');
+  }
+  $('#svcBtn').addEventListener('click', () => { renderSvcs(); openSh('#svcSheet'); });
+  $('#svcList').addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-sv]'); if (!b) return;
+    const [act, id] = b.dataset.sv.split('|'); const L = shopData.services, i = L.findIndex((s) => s.id === id); if (i < 0) return;
+    if (act === 'up' && i > 0) [L[i - 1], L[i]] = [L[i], L[i - 1]];
+    if (act === 'down' && i < L.length - 1) [L[i + 1], L[i]] = [L[i], L[i + 1]];
+    if (act === 'hide') L[i].hidden = !L[i].hidden;
+    if (act === 'del') {
+      if (!(await uiAsk('「' + L[i].name + '」を表から消しますか？\nこの決済の○×の記録も消えます。', '消す'))) return;
+      L.splice(i, 1); shopData.shops.forEach((s) => { delete s.marks[id]; });
+    }
+    saveShopData(); renderSvcs();
+  });
+  function addSvc() {
+    const n = $('#svcNew').value.trim(); if (!n) return;
+    shopData.services.push({ id: 's' + Date.now().toString(36), name: n, hidden: false });
+    $('#svcNew').value = ''; saveShopData(); renderSvcs();
+  }
+  $('#svcAddBtn').addEventListener('click', addSvc);
+  $('#svcNew').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); addSvc(); } });
+  // 取り込み：お店は新しいほうを採用、決済サービスは足りない分を追加
+  function mergeShopTable(inc) {
+    const have = new Set(shopData.services.map((s) => s.id));
+    (inc.services || []).forEach((s) => { if (!have.has(s.id)) shopData.services.push(s); });
+    const byId = new Map(shopData.shops.map((s) => [s.id, s]));
+    (inc.shops || []).forEach((s) => { const l = byId.get(s.id); if (!l || (s.updatedAt || 0) > (l.updatedAt || 0)) byId.set(s.id, s); });
+    shopData.shops = [...byId.values()]; saveShopData();
+  }
+  // 下のタブ
+  $('#tabbar').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) showView(b.dataset.tab); });
+
   // ---------- 起動 ----------
   (async function init() {
     setupViewportTracking();
@@ -1119,6 +1363,8 @@
     renderCompare();
     renderMonthMemo();
     renderVersionLabel();
+    let lastTab = 'compareView'; try { lastTab = localStorage.getItem(TAB_KEY) || 'compareView'; } catch (e) {}
+    if (lastTab === 'shopsView') showView('shopsView');
   })();
 
   // ---------- visualViewport（キーボード対策） ----------
